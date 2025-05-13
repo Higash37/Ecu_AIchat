@@ -1,0 +1,9 @@
+services:
+  api:
+    build: ./ai_edu_api
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./ai_edu_api:/app
+    env_file:
+      - .env
