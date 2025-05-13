@@ -1,11 +1,8 @@
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse  # ✅ ← 追加！
-from dotenv import load_dotenv
+from fastapi.responses import JSONResponse
 from openai import OpenAI
 import os
-
-load_dotenv()
 
 app = FastAPI()
 
@@ -18,8 +15,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ✅ OpenAIクライアント（.env の OPENAI_API_KEY を自動読込）
-client = OpenAI()
+# ✅ OpenAIクライアント（Docker側で環境変数として渡される前提）
+client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 
 @app.post("/chat")
 async def chat(request: Request):
@@ -34,5 +31,4 @@ async def chat(request: Request):
     reply = response.choices[0].message.content
     print("GPT reply:", reply)
 
-    # ✅ JSONResponseでUTF-8を明示
     return JSONResponse(content={"reply": reply}, media_type="application/json; charset=utf-8")
