@@ -1,8 +1,15 @@
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from dotenv import load_dotenv
 from openai import OpenAI
 import os
+import pathlib
+
+# プロジェクトルートディレクトリのパスを取得
+root_dir = pathlib.Path(__file__).parent.parent.absolute()
+# ルートディレクトリの.envファイルを読み込む
+load_dotenv(os.path.join(root_dir, '.env'))
 
 app = FastAPI()
 
@@ -15,7 +22,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ✅ OpenAIクライアント（Docker側で環境変数として渡される前提）
+# ✅ OpenAIクライアント（.envファイルからOPENAI_API_KEYを読み込み）
 client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 
 @app.post("/chat")

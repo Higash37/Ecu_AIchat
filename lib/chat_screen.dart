@@ -21,7 +21,7 @@ class _ChatScreenState extends State<ChatScreen> {
     final textMessage = types.TextMessage(
       author: _user,
       createdAt: DateTime.now().millisecondsSinceEpoch,
-      id: const Uuid().v4(),
+      id: Uuid().v4(),
       text: message.text,
     );
     setState(() {
@@ -33,7 +33,7 @@ class _ChatScreenState extends State<ChatScreen> {
     final aiMessage = types.TextMessage(
       author: _bot,
       createdAt: DateTime.now().millisecondsSinceEpoch,
-      id: const Uuid().v4(),
+      id: Uuid().v4(),
       text: aiReply,
     );
     setState(() {
@@ -42,7 +42,7 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Future<String> _fetchAIResponse(String text) async {
-    final uri = Uri.parse('http://localhost:8000/chat');
+    final uri = Uri.parse('http://127.0.0.1:8000/chat'); // ✅ ←ここに変更！
 
     final response = await http.post(
       uri,

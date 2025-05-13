@@ -3,6 +3,7 @@
     "buildlog",
     "dotenv",
     "fastapi",
+    "gradlew",
     "Schyler",
     "swiftpm",
     "Symbolication",
