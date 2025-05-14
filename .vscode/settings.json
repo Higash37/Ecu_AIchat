@@ -5,6 +5,7 @@
     "fastapi",
     "gradlew",
     "Schyler",
+    "supabase",
     "swiftpm",
     "Symbolication",
     "uvicorn"

@@ -32,8 +32,10 @@ dependencies:
     sdk: flutter
   flutter_chat_ui: 1.6.9
   flutter_chat_types: ^3.6.2
+  flutter_dotenv: ^5.1.0
   http: ^1.4.0
   uuid: ^3.0.7
+  supabase_flutter: ^1.10.17
 
 dev_dependencies:
   flutter_test:
