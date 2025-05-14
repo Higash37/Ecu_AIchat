@@ -4,6 +4,7 @@
     "dotenv",
     "fastapi",
     "gradlew",
+    "Mapify",
     "Schyler",
     "supabase",
     "swiftpm",
