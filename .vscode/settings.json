@@ -9,7 +9,8 @@
     "supabase",
     "swiftpm",
     "Symbolication",
-    "uvicorn"
+    "uvicorn",
+    "wordcloud"
   ],
   "java.configuration.updateBuildConfiguration": "automatic",
   "python.defaultInterpreterPath": "${workspaceFolder}/ai_edu_api/venv/Scripts/python.exe",
