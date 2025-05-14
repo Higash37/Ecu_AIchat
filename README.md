@@ -16,12 +16,3 @@ For help getting started with Flutter development, view the
 samples, guidance on mobile development, and a full API reference.
 
 # Ecu_AIchat
-
-# どんな方法で自分を認識するのか？
-
-・マークテスト(ルージュテスト)
-被験体が知らないうちに頬や顔の紅に気付くか
-
-・選好注視法
-・ステッカー課題(Rouge Test Mark Test)
-頭についたシールを自己像(鏡)をもとに読み取れる。
