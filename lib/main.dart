@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'screens/project_list_screen.dart'; // ✅ 最初に表示する画面を変更
+import 'screens/chat_screen.dart'; // ✅ ChatScreenを使用
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -25,7 +25,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return const MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: ProjectListScreen(), // ✅ プロジェクト一覧から開始
+      home: ChatScreen(), // ✅ チャット画面から開始
     );
   }
 }
