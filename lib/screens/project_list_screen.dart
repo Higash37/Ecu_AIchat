@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/project.dart';
 import '../services/project_service.dart';
+import 'project_detail_screen.dart';
 
 class ProjectListScreen extends StatefulWidget {
   const ProjectListScreen({super.key});
@@ -10,7 +11,7 @@ class ProjectListScreen extends StatefulWidget {
 }
 
 class _ProjectListScreenState extends State<ProjectListScreen> {
-  final _service = ProjectService();
+  final _projectService = ProjectService();
   List<Project> _projects = [];
 
   @override
@@ -20,20 +21,10 @@ class _ProjectListScreenState extends State<ProjectListScreen> {
   }
 
   Future<void> _loadProjects() async {
-    final projects = await _service.fetchProjects();
+    final projects = await _projectService.fetchProjects();
     setState(() {
       _projects = projects;
     });
-  }
-
-  void _addProject() async {
-    final newProject = Project(
-      name: "新規プロジェクト",
-      description: "説明",
-      createdAt: DateTime.now(),
-    );
-    await _service.createProject(newProject);
-    _loadProjects();
   }
 
   @override
@@ -46,13 +37,18 @@ class _ProjectListScreenState extends State<ProjectListScreen> {
           final project = _projects[index];
           return ListTile(
             title: Text(project.name),
-            subtitle: Text(project.description ?? ''),
+            subtitle: Text(project.description ?? '（説明なし）'),
+            trailing: const Icon(Icons.arrow_forward_ios),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ProjectDetailScreen(project: project),
+                ),
+              );
+            },
           );
         },
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _addProject,
-        child: const Icon(Icons.add),
       ),
     );
   }
