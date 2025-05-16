@@ -20,4 +20,26 @@ class ProjectService {
 
     if (response == null) throw Exception('Failed to insert project');
   }
+
+  Future<void> updateProject(Project project) async {
+    if (project.id == null) {
+      throw Exception('プロジェクトIDが指定されていません');
+    }
+
+    final response = await supabase
+        .from('projects')
+        .update(project.toMap())
+        .eq('id', project.id);
+
+    if (response == null) throw Exception('プロジェクトの更新に失敗しました');
+  }
+
+  Future<void> deleteProject(String projectId) async {
+    final response = await supabase
+        .from('projects')
+        .delete()
+        .eq('id', projectId);
+
+    if (response == null) throw Exception('プロジェクトの削除に失敗しました');
+  }
 }
