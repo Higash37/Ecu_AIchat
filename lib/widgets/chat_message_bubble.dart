@@ -79,7 +79,7 @@ class ChatMessageBubble extends StatelessWidget {
                 ),
                 // メッセージ時刻表示（LINE風）
                 Padding(
-                  padding: const EdgeInsets.only(
+                  padding: EdgeInsets.only(
                     top: 2.0,
                     left: isUserMessage ? 0 : 4.0,
                     right: isUserMessage ? 4.0 : 0,

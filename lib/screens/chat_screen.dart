@@ -5,7 +5,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../theme/app_theme.dart';
 import '../widgets/app_scaffold.dart';
-import '../widgets/chat_message_bubble.dart';
+import '../widgets/markdown_message.dart';
 import '../widgets/chat_input_field.dart';
 
 class ChatScreen extends StatefulWidget {
@@ -133,31 +133,7 @@ class _ChatScreenState extends State<ChatScreen> {
       ],
       body: Column(
         children: [
-          // チャットヘッダー（プロジェクト情報など）
-          Container(
-            padding: const EdgeInsets.all(12),
-            color: Colors.white,
-            child: Row(
-              children: [
-                const Icon(Icons.history, color: AppTheme.primaryColor),
-                const SizedBox(width: 8),
-                const Text(
-                  '未保存のチャット',
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-                const Spacer(),
-                TextButton.icon(
-                  icon: const Icon(Icons.save, size: 16),
-                  label: const Text('保存'),
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('チャットの保存機能は現在開発中です')),
-                    );
-                  },
-                ),
-              ],
-            ),
-          ),
+          // チャットヘッダーは削除
 
           // チャットメッセージ表示エリア
           Expanded(
@@ -182,8 +158,7 @@ class _ChatScreenState extends State<ChatScreen> {
                                   _messages[index] as types.TextMessage;
                               final isUserMessage =
                                   message.author.id == _user.id;
-
-                              return ChatMessageBubble(
+                              return MarkdownMessage(
                                 message: message,
                                 isUserMessage: isUserMessage,
                               );
