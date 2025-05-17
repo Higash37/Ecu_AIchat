@@ -57,7 +57,6 @@ class HeaderGuideline extends StatelessWidget {
     final indent = (header.level - 1) * 20.0;
     final isH1 = header.level == 1;
     final isH2 = header.level == 2;
-    final isH3 = header.level == 3;
 
     Color lineColor;
     double lineWidth;
