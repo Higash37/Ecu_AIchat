@@ -269,9 +269,9 @@ class _QuizWidgetState extends State<QuizWidget> {
       textColor = Colors.white;
     }
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12.0),
+      padding: const EdgeInsets.only(bottom: 8.0), // パディングを小さく
       child: InkWell(
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(8), // 小さくしたので角丸も調整
         onTap:
             _showExplanation
                 ? null // 説明表示中は選択肢を押せなくする
@@ -282,10 +282,10 @@ class _QuizWidgetState extends State<QuizWidget> {
                   });
                 },
         child: Container(
-          height: 70, // 高さを固定して選択肢を大きく
+          height: 30, // 選択肢の高さを約40%に縮小（70→30）
           decoration: BoxDecoration(
             color: bgColor,
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(8), // 小さくしたので角丸も調整
             border: Border.all(color: borderColor, width: 1.5),
             boxShadow: [
               if (_showExplanation && isSelected)
@@ -337,17 +337,17 @@ class _QuizWidgetState extends State<QuizWidget> {
                         Flexible(flex: 100 - percentage, child: Container()),
                     ],
                   ),
-                ),
-
-              // コンテンツ
+                ), // コンテンツ
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                ), // パディングを小さく
                 child: Row(
                   children: [
                     // 選択肢マーカー（A, B, C, D）とアイコン
                     Container(
-                      width: 32,
-                      height: 32,
+                      width: 22, // サイズを小さく
+                      height: 22, // サイズを小さく
                       decoration: BoxDecoration(
                         color:
                             _showExplanation
@@ -383,14 +383,14 @@ class _QuizWidgetState extends State<QuizWidget> {
                                       option.isCorrect
                                           ? Colors.green.shade700
                                           : Colors.red.shade700,
-                                  size: 18,
+                                  size: 12, // サイズを小さく
                                 )
                                 : Text(
                                   String.fromCharCode(
                                     65 + index,
                                   ), // A, B, C, D...
                                   style: GoogleFonts.notoSans(
-                                    fontSize: 16,
+                                    fontSize: 13, // サイズを小さく
                                     fontWeight: FontWeight.bold,
                                     color:
                                         isSelected
@@ -404,15 +404,13 @@ class _QuizWidgetState extends State<QuizWidget> {
                                 ),
                       ),
                     ),
-
-                    const SizedBox(width: 12),
-
+                    const SizedBox(width: 8), // 間隔を狭く
                     // 選択肢テキスト
                     Expanded(
                       child: Text(
                         option.text,
                         style: GoogleFonts.notoSans(
-                          fontSize: 15,
+                          fontSize: 13, // サイズを小さく
                           fontWeight:
                               isSelected ? FontWeight.bold : FontWeight.normal,
                           color: textColor,
@@ -423,8 +421,8 @@ class _QuizWidgetState extends State<QuizWidget> {
                         isSelected)
                       Container(
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 3,
+                          horizontal: 6, // パディングを小さく
+                          vertical: 2, // パディングを小さく
                         ),
                         decoration: BoxDecoration(
                           color:
@@ -452,7 +450,7 @@ class _QuizWidgetState extends State<QuizWidget> {
                                 padding: const EdgeInsets.only(right: 4.0),
                                 child: Icon(
                                   Icons.bar_chart,
-                                  size: 14,
+                                  size: 12, // アイコンサイズ縮小
                                   color:
                                       option.isCorrect
                                           ? Colors.green.shade700

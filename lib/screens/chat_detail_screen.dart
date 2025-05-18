@@ -205,6 +205,10 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // 画面幅を取得してレイアウトを決定
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isWideScreen = screenWidth > 1000; // PCレイアウト用のしきい値
+
     return AppScaffold(
       title: _isLoading ? 'チャット読み込み中...' : _chat.title,
       currentNavIndex: 1,
@@ -218,188 +222,239 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
       body:
           _isLoading
               ? const Center(child: CircularProgressIndicator())
-              : Column(
+              : isWideScreen
+              // PCレイアウト - サイドバー形式
+              ? Row(
                 children: [
-                  // AIアシスタントヘッダー（ChatGPT風）
+                  // 左側：チャット履歴サイドバー（全体の30%）
                   Container(
-                    color: Colors.white,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 12,
-                    ),
-                    child: Row(
-                      children: [
-                        CircleAvatar(
-                          backgroundColor: AppTheme.primaryColor.withAlpha(
-                            (0.15 * 255).round(),
-                          ),
-                          radius: 20,
-                          child: const Icon(
-                            Icons.smart_toy,
-                            color: AppTheme.primaryColor,
-                          ),
+                    width: screenWidth * 0.3, // 画面幅の30%
+                    decoration: BoxDecoration(
+                      border: Border(
+                        right: BorderSide(
+                          color: Colors.grey.shade300,
+                          width: 1,
                         ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisSize: MainAxisSize.min,
+                      ),
+                      color: Colors.grey.shade50,
+                    ),
+                    child: Column(
+                      children: [
+                        // サイドバーヘッダー
+                        Container(
+                          padding: const EdgeInsets.all(16),
+                          color: Colors.white,
+                          child: Row(
                             children: [
+                              const Icon(
+                                Icons.history,
+                                color: AppTheme.primaryColor,
+                              ),
+                              const SizedBox(width: 8),
                               Text(
-                                "AI アシスタント",
+                                'チャット履歴',
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold,
                                   color: AppTheme.primaryColor,
                                 ),
                               ),
-                              const SizedBox(height: 2),
-                              Text(
-                                "学習のサポートをします",
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.grey.shade600,
-                                ),
-                              ),
                             ],
+                          ),
+                        ),
+
+                        // ここに履歴リストを表示する場合は追加
+                        // 現状では空の領域として表示
+                        Expanded(
+                          child: Center(
+                            child: Text(
+                              '他の会話履歴',
+                              style: TextStyle(
+                                color: Colors.grey.shade500,
+                                fontStyle: FontStyle.italic,
+                              ),
+                            ),
                           ),
                         ),
                       ],
                     ),
-                  ), // 区切り線
-                  Divider(
-                    height: 1,
-                    thickness: 1,
-                    color: Colors.grey.withAlpha((0.2 * 255).round()),
-                  ), // チャットメッセージ表示エリア
-                  Expanded(
-                    child: LayoutBuilder(
-                      builder: (context, constraints) {
-                        // PCとタブレット用の条件（画面幅が広い場合）
-                        final isWideScreen = constraints.maxWidth > 600;
-                        final contentWidth =
-                            isWideScreen
-                                ? constraints.maxWidth *
-                                    0.7 // 画面幅の70%
-                                : constraints.maxWidth; // スマホでは全幅
-
-                        return Center(
-                          child: SizedBox(
-                            width: contentWidth,
-                            child: Container(
-                              decoration: BoxDecoration(
-                                color: AppTheme.backgroundColor,
-                                image: DecorationImage(
-                                  image: const AssetImage(
-                                    'assets/images/chat_bg.png',
-                                  ),
-                                  repeat: ImageRepeat.repeat,
-                                  opacity: 0.08,
-                                ),
-                              ),
-                              child:
-                                  _messages.isEmpty
-                                      ? Center(
-                                        child: Column(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.center,
-                                          children: [
-                                            Icon(
-                                              Icons.chat_bubble_outline,
-                                              size: 80,
-                                              color: Colors.grey.shade400,
-                                            ),
-                                            const SizedBox(height: 16),
-                                            const Text(
-                                              'メッセージがありません',
-                                              style: TextStyle(
-                                                fontSize: 18,
-                                                fontWeight: FontWeight.bold,
-                                                color: Colors.grey,
-                                              ),
-                                            ),
-                                            const SizedBox(height: 8),
-                                            const Text(
-                                              '下のテキスト欄からメッセージを送信してください',
-                                              style: TextStyle(
-                                                color: Colors.grey,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      )
-                                      : Stack(
-                                        children: [
-                                          ListView.builder(
-                                            reverse: true,
-                                            padding: const EdgeInsets.only(
-                                              top: 16,
-                                              bottom: 16,
-                                            ),
-                                            itemCount: _messages.length,
-                                            itemBuilder: (context, index) {
-                                              final message =
-                                                  _messages[index]
-                                                      as types.TextMessage;
-                                              final isUserMessage =
-                                                  message.author.id == _user.id;
-                                              return MarkdownMessage(
-                                                message: message,
-                                                isUserMessage: isUserMessage,
-                                              );
-                                            },
-                                          ),
-                                          if (_isSending)
-                                            Positioned(
-                                              bottom: 0,
-                                              left: 0,
-                                              right: 0,
-                                              child: Container(
-                                                color: Colors.white.withAlpha(
-                                                  (0.8 * 255).round(),
-                                                ),
-                                                padding: const EdgeInsets.all(
-                                                  16,
-                                                ),
-                                                child: Row(
-                                                  children: [
-                                                    const SizedBox(
-                                                      width: 20,
-                                                      height: 20,
-                                                      child:
-                                                          CircularProgressIndicator(
-                                                            strokeWidth: 2,
-                                                            color:
-                                                                AppTheme
-                                                                    .primaryColor,
-                                                          ),
-                                                    ),
-                                                    const SizedBox(width: 16),
-                                                    Text(
-                                                      'AIが回答を考えています...',
-                                                      style: TextStyle(
-                                                        color:
-                                                            Colors
-                                                                .grey
-                                                                .shade800,
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
-                                            ),
-                                        ],
-                                      ),
-                            ),
-                          ),
-                        );
-                      },
-                    ),
                   ),
 
-                  // 入力エリア
-                  ChatInputField(onSendPressed: _onSendPressed),
+                  // 右側：チャット本体（全体の70%）
+                  Expanded(child: _buildChatContent()),
                 ],
+              )
+              // モバイルレイアウト - 全画面表示
+              : _buildChatContent(),
+    );
+  }
+
+  // チャットのメインコンテンツを構築
+  Widget _buildChatContent() {
+    return Column(
+      children: [
+        // AIアシスタントヘッダー（ChatGPT風）
+        Container(
+          color: Colors.white,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: Row(
+            children: [
+              CircleAvatar(
+                backgroundColor: AppTheme.primaryColor.withAlpha(
+                  (0.15 * 255).round(),
+                ),
+                radius: 20,
+                child: const Icon(
+                  Icons.smart_toy,
+                  color: AppTheme.primaryColor,
+                ),
               ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      "AI アシスタント",
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: AppTheme.primaryColor,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      "学習のサポートをします",
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey.shade600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        // 区切り線
+        Divider(
+          height: 1,
+          thickness: 1,
+          color: Colors.grey.withAlpha((0.2 * 255).round()),
+        ),
+        // チャットメッセージ表示エリア
+        Expanded(
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              // PCとタブレット用の条件（画面幅が広い場合）
+              final isWideScreen = constraints.maxWidth > 600;
+              final contentWidth =
+                  isWideScreen
+                      ? constraints.maxWidth *
+                          0.7 // 画面幅の70%
+                      : constraints.maxWidth; // スマホでは全幅
+
+              return Center(
+                child: SizedBox(
+                  width: contentWidth,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: AppTheme.backgroundColor,
+                      image: DecorationImage(
+                        image: const AssetImage('assets/images/chat_bg.png'),
+                        repeat: ImageRepeat.repeat,
+                        opacity: 0.08,
+                      ),
+                    ),
+                    child:
+                        _messages.isEmpty
+                            ? Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.chat_bubble_outline,
+                                    size: 80,
+                                    color: Colors.grey.shade400,
+                                  ),
+                                  const SizedBox(height: 16),
+                                  const Text(
+                                    'メッセージがありません',
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.grey,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  const Text(
+                                    '下のテキスト欄からメッセージを送信してください',
+                                    style: TextStyle(color: Colors.grey),
+                                  ),
+                                ],
+                              ),
+                            )
+                            : Stack(
+                              children: [
+                                ListView.builder(
+                                  reverse: true,
+                                  padding: const EdgeInsets.only(
+                                    top: 16,
+                                    bottom: 16,
+                                  ),
+                                  itemCount: _messages.length,
+                                  itemBuilder: (context, index) {
+                                    final message =
+                                        _messages[index] as types.TextMessage;
+                                    final isUserMessage =
+                                        message.author.id == _user.id;
+                                    return MarkdownMessage(
+                                      message: message,
+                                      isUserMessage: isUserMessage,
+                                    );
+                                  },
+                                ),
+                                if (_isSending)
+                                  Positioned(
+                                    bottom: 0,
+                                    left: 0,
+                                    right: 0,
+                                    child: Container(
+                                      color: Colors.white.withAlpha(
+                                        (0.8 * 255).round(),
+                                      ),
+                                      padding: const EdgeInsets.all(16),
+                                      child: Row(
+                                        children: [
+                                          const SizedBox(
+                                            width: 20,
+                                            height: 20,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2,
+                                              color: AppTheme.primaryColor,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 16),
+                                          Text(
+                                            'AIが回答を考えています...',
+                                            style: TextStyle(
+                                              color: Colors.grey.shade800,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+        // 入力エリア
+        ChatInputField(onSendPressed: _onSendPressed),
+      ],
     );
   }
 
