@@ -623,8 +623,8 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                   }
                 },
                 style: ButtonStyle(
-                  backgroundColor: MaterialStateProperty.all(Colors.red),
-                  foregroundColor: MaterialStateProperty.all(Colors.white),
+                  backgroundColor: WidgetStateProperty.all(Colors.red),
+                  foregroundColor: WidgetStateProperty.all(Colors.white),
                 ),
                 child: const Text('クリア'),
               ),

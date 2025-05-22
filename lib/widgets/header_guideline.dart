@@ -11,10 +11,10 @@ class HeaderGuideline extends StatelessWidget {
   final bool isActive;
 
   const HeaderGuideline({
-    Key? key,
+    super.key,
     required this.markdownText,
     this.isActive = true,
-  }) : super(key: key);
+  });
 
   /// マークダウンから見出し情報を抽出
   List<HeaderInfo> _extractHeaders() {
