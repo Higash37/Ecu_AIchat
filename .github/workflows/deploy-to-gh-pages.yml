@@ -15,6 +15,7 @@ jobs:
           channel: stable
       - run: flutter pub get
       - run: flutter build web
+      - run: cp build/web/index.html build/web/404.html
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
         with:

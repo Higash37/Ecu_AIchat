@@ -5,6 +5,7 @@
     "fastapi",
     "gradlew",
     "Mapify",
+    "peaceiris",
     "Schyler",
     "subosito",
     "supabase",
