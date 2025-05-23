@@ -7,6 +7,7 @@ import '../theme/app_theme.dart';
 import '../widgets/app_scaffold.dart';
 import 'chat_detail_screen.dart';
 import 'tag_list_screen.dart';
+import 'package:uuid/uuid.dart';
 
 class ProjectDetailScreen extends StatefulWidget {
   final Project project;
@@ -433,7 +434,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
                   }
 
                   final chat = Chat(
-                    id: '',
+                    id: Uuid().v4(),
                     projectId: widget.project.id!,
                     title: title,
                     lastMessage: '',
@@ -446,7 +447,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
                     final createdChat = await _chatService.createChat(chat);
                     _loadChats();
 
-                    if (mounted) {
+                    if (createdChat.id.isNotEmpty && mounted) {
                       // 作成したチャットの詳細画面に移動
                       Navigator.push(
                         context,

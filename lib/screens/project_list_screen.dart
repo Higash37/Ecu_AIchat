@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:uuid/uuid.dart';
 import '../models/project.dart';
 import '../services/project_service.dart';
 import '../theme/app_theme.dart';
@@ -272,7 +273,7 @@ class _ProjectListScreenState extends State<ProjectListScreen> {
                   }
 
                   final project = Project(
-                    id: '', // Supabaseで自動生成
+                    id: Uuid().v4(), // Supabaseで自動生成しない場合はここで生成
                     name: name,
                     description:
                         descriptionController.text.trim().isNotEmpty

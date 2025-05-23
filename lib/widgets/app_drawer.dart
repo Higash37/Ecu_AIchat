@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:uuid/uuid.dart';
 import '../screens/project_list_screen.dart';
 import '../screens/chat_list_screen.dart';
 import '../screens/chat_screen.dart';
@@ -67,13 +68,16 @@ class AppDrawer extends StatelessWidget {
               context,
               title: '新規チャット',
               icon: Icons.chat_bubble,
-              screen: const ChatScreen(),
+              screen: ChatScreen(
+                chatId: Uuid().v4(),
+                projectId: '', // 空文字で渡す
+              ), // projectIdも渡す
             ),
             _buildMenuItem(
               context,
               title: 'タグ管理',
               icon: Icons.tag,
-              screen: const TagListScreen(projectId: 'default-project'),
+              screen: const TagListScreen(projectId: ''), // 空文字で渡す
             ),
             const Divider(),
             _buildMenuItem(

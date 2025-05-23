@@ -1,7 +1,7 @@
 // models/chat.dart
 class Chat {
   final String id;
-  final String projectId;
+  final String? projectId; // nullableに変更
   final String title;
   final DateTime createdAt;
   final DateTime? updatedAt;
@@ -10,7 +10,7 @@ class Chat {
 
   Chat({
     required this.id,
-    required this.projectId,
+    this.projectId, // nullable
     required this.title,
     required this.createdAt,
     this.updatedAt,
@@ -21,7 +21,7 @@ class Chat {
   factory Chat.fromMap(Map<String, dynamic> map) {
     return Chat(
       id: map['id'] as String,
-      projectId: map['project_id'] as String,
+      projectId: map['project_id'], // null許容
       title: map['title'] ?? '',
       createdAt: DateTime.parse(map['created_at']),
       updatedAt:
@@ -37,10 +37,14 @@ class Chat {
   Map<String, dynamic> toMap() {
     final Map<String, dynamic> result = {
       'id': id,
-      'project_id': projectId,
       'title': title,
       'created_at': createdAt.toIso8601String(),
     };
+
+    // projectIdがnullや空文字でなければproject_idを含める
+    if (projectId != null && projectId!.isNotEmpty) {
+      result['project_id'] = projectId;
+    }
 
     if (updatedAt != null) {
       result['updated_at'] = updatedAt!.toIso8601String();

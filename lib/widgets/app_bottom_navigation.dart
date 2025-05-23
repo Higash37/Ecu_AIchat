@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:uuid/uuid.dart';
 import '../screens/project_list_screen.dart';
 import '../screens/chat_list_screen.dart';
 import '../screens/chat_screen.dart';
@@ -47,12 +48,15 @@ class AppBottomNavigation extends StatelessWidget {
                 screen = const ChatListScreen();
                 break;
               case 2:
-                screen = const ChatScreen();
+                screen = ChatScreen(
+                  chatId: Uuid().v4(),
+                  projectId: '', // 空文字で渡す
+                ); // projectIdも渡す
                 break;
               case 3:
                 // TagListScreenはprojectIdを必要とするため、プロジェクトIDがないとエラーになる
                 // 仮のプロジェクトIDを使用して画面を表示（本来はプロジェクト選択UIを表示すべき）
-                screen = TagListScreen(projectId: 'default-project');
+                screen = TagListScreen(projectId: ''); // 空文字で渡す
                 break;
               default:
                 return;

@@ -11,6 +11,7 @@ import '../theme/app_theme.dart';
 import '../widgets/app_scaffold.dart';
 import '../widgets/markdown_message.dart';
 import '../widgets/chat_input_field.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ChatDetailScreen extends StatefulWidget {
   final String chatId;
@@ -153,12 +154,14 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
   }
 
   Future<void> _saveUserMessage(String content) async {
+    final currentUserId = Supabase.instance.client.auth.currentUser?.id;
     final message = app_models.Message(
       id: const Uuid().v4(),
       chatId: widget.chatId,
       sender: 'user',
       content: content,
       createdAt: DateTime.now(),
+      userId: currentUserId, // ログインユーザーIDをセット
     );
     await _messageService.createMessage(message);
     await _chatService.incrementMessageCount(widget.chatId);
@@ -171,27 +174,38 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
       sender: 'ai',
       content: content,
       createdAt: DateTime.now(),
+      userId: null, // AIはuserId: nullでもOK
     );
     await _messageService.createMessage(message);
     await _chatService.updateLastMessage(widget.chatId, content);
     await _chatService.incrementMessageCount(widget.chatId);
   }
 
-  Future<String> _fetchAIResponse(String text) async {
-    final uri = Uri.parse('http://127.0.0.1:8000/chat');
+  Future<String> _fetchAIResponse(String userInput) async {
+    // 直近のチャット履歴（このチャットIDの全メッセージ）を取得
+    final history = await _messageService.fetchMessagesByChat(widget.chatId);
+    // role: 'user' or 'assistant' 形式でAIサーバーに渡す
+    final messagesForAI =
+        history
+            .map(
+              (m) => {
+                'role': m.sender == 'user' ? 'user' : 'assistant',
+                'content': m.content,
+              },
+            )
+            .toList();
+    // 今回のユーザー入力も追加
+    messagesForAI.add({'role': 'user', 'content': userInput});
 
+    final uri = Uri.parse('http://127.0.0.1:8000/chat');
     final response = await http.post(
       uri,
       headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
-        "messages": [
-          {"role": "user", "content": text},
-        ],
-      }),
+      body: jsonEncode({"messages": messagesForAI}),
     );
 
     if (response.statusCode != 200) {
-      throw Exception('API error: ${response.statusCode}');
+      throw Exception('API error: \\${response.statusCode}');
     }
 
     final json = jsonDecode(response.body);

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:uuid/uuid.dart';
 import '../models/chat.dart';
 import '../services/chat_service.dart';
 import '../theme/app_theme.dart';
@@ -108,8 +109,9 @@ class _ChatListScreenState extends State<ChatListScreen> {
     // ダイアログの結果を処理
     if (title != null && title.isNotEmpty) {
       try {
+        final newChatId = Uuid().v4(); // UUID生成
         final newChat = Chat(
-          id: '',
+          id: newChatId,
           projectId: widget.projectId!,
           title: title,
           createdAt: DateTime.now(),
@@ -121,7 +123,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
         final createdChat = await _chatService.createChat(newChat);
         await _loadChats();
 
-        if (mounted) {
+        if (createdChat.id.isNotEmpty && mounted) {
           // 作成したチャットの詳細画面に遷移
           Navigator.push(
             context,

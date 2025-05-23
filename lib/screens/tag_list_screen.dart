@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:uuid/uuid.dart';
 import '../models/tag.dart';
 import '../services/tag_service.dart';
 import '../theme/app_theme.dart';
@@ -94,7 +95,7 @@ class _TagListScreenState extends State<TagListScreen> {
 
     try {
       final newTag = Tag(
-        id: '',
+        id: Uuid().v4(),
         projectId: widget.projectId,
         label: label,
         type: _selectedType,

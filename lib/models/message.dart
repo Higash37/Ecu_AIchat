@@ -5,6 +5,7 @@ class Message {
   final String sender; // 'user' or 'ai'
   final String content;
   final DateTime createdAt;
+  final String? userId; // 追加: ユーザー識別子
 
   Message({
     required this.id,
@@ -12,6 +13,7 @@ class Message {
     required this.sender,
     required this.content,
     required this.createdAt,
+    this.userId,
   });
 
   factory Message.fromMap(Map<String, dynamic> map) {
@@ -21,6 +23,7 @@ class Message {
       sender: map['sender'],
       content: map['content'],
       createdAt: DateTime.parse(map['created_at']),
+      userId: map['user_id'],
     );
   }
 
@@ -31,6 +34,7 @@ class Message {
       'sender': sender,
       'content': content,
       'created_at': createdAt.toIso8601String(),
+      'user_id': userId,
     };
   }
 }

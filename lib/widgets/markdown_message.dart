@@ -8,6 +8,7 @@ import '../theme/app_theme.dart';
 import '../models/quiz.dart';
 import 'quiz_widget.dart';
 import 'header_guideline.dart';
+import 'pdf_preview_screen.dart';
 
 class MarkdownMessage extends StatefulWidget {
   final types.TextMessage message;
@@ -154,6 +155,94 @@ class _MarkdownMessageState extends State<MarkdownMessage> {
     return '$hour:$minute';
   }
 
+  // 理系・古字・上付き・下付き・ギリシャ文字・記号などの変換
+  String _convertSuperscript(String text) {
+    // 上付き数字
+    text = text.replaceAllMapped(RegExp(r'\^0'), (m) => '⁰');
+    text = text.replaceAllMapped(RegExp(r'\^1'), (m) => '¹');
+    text = text.replaceAllMapped(RegExp(r'\^2'), (m) => '²');
+    text = text.replaceAllMapped(RegExp(r'\^3'), (m) => '³');
+    text = text.replaceAllMapped(RegExp(r'\^4'), (m) => '⁴');
+    text = text.replaceAllMapped(RegExp(r'\^5'), (m) => '⁵');
+    text = text.replaceAllMapped(RegExp(r'\^6'), (m) => '⁶');
+    text = text.replaceAllMapped(RegExp(r'\^7'), (m) => '⁷');
+    text = text.replaceAllMapped(RegExp(r'\^8'), (m) => '⁸');
+    text = text.replaceAllMapped(RegExp(r'\^9'), (m) => '⁹');
+    text = text.replaceAllMapped(RegExp(r'\^n'), (m) => 'ⁿ');
+    text = text.replaceAllMapped(RegExp(r'\^\-1'), (m) => '⁻¹');
+    // 下付き数字
+    text = text.replaceAllMapped(RegExp(r'_0'), (m) => '₀');
+    text = text.replaceAllMapped(RegExp(r'_1'), (m) => '₁');
+    text = text.replaceAllMapped(RegExp(r'_2'), (m) => '₂');
+    text = text.replaceAllMapped(RegExp(r'_3'), (m) => '₃');
+    text = text.replaceAllMapped(RegExp(r'_4'), (m) => '₄');
+    text = text.replaceAllMapped(RegExp(r'_5'), (m) => '₅');
+    text = text.replaceAllMapped(RegExp(r'_6'), (m) => '₆');
+    text = text.replaceAllMapped(RegExp(r'_7'), (m) => '₇');
+    text = text.replaceAllMapped(RegExp(r'_8'), (m) => '₈');
+    text = text.replaceAllMapped(RegExp(r'_9'), (m) => '₉');
+    text = text.replaceAllMapped(RegExp(r'_n'), (m) => 'ₙ');
+    // ギリシャ文字
+    text = text.replaceAll('alpha', 'α');
+    text = text.replaceAll('beta', 'β');
+    text = text.replaceAll('gamma', 'γ');
+    text = text.replaceAll('delta', 'δ');
+    text = text.replaceAll('epsilon', 'ε');
+    text = text.replaceAll('zeta', 'ζ');
+    text = text.replaceAll('eta', 'η');
+    text = text.replaceAll('theta', 'θ');
+    text = text.replaceAll('iota', 'ι');
+    text = text.replaceAll('kappa', 'κ');
+    text = text.replaceAll('lambda', 'λ');
+    text = text.replaceAll('mu', 'μ');
+    text = text.replaceAll('nu', 'ν');
+    text = text.replaceAll('xi', 'ξ');
+    text = text.replaceAll('omicron', 'ο');
+    text = text.replaceAll('pi', 'π');
+    text = text.replaceAll('rho', 'ρ');
+    text = text.replaceAll('sigma', 'σ');
+    text = text.replaceAll('tau', 'τ');
+    text = text.replaceAll('upsilon', 'υ');
+    text = text.replaceAll('phi', 'φ');
+    text = text.replaceAll('chi', 'χ');
+    text = text.replaceAll('psi', 'ψ');
+    text = text.replaceAll('omega', 'ω');
+    // 数学記号
+    text = text.replaceAll('sqrt', '√');
+    text = text.replaceAll('infinity', '∞');
+    text = text.replaceAll('≒', '≒');
+    text = text.replaceAll('≠', '≠');
+    text = text.replaceAll('≡', '≡');
+    text = text.replaceAll('<=', '≤');
+    text = text.replaceAll('>=', '≥');
+    text = text.replaceAll('->', '→');
+    text = text.replaceAll('<-', '←');
+    text = text.replaceAll('<->', '↔');
+    text = text.replaceAll('+-', '±');
+    text = text.replaceAll('degree', '°');
+    // 古字
+    text = text.replaceAll('ゑ', 'ゑ');
+    text = text.replaceAll('ゐ', 'ゐ');
+    text = text.replaceAll('ヱ', 'ヱ');
+    text = text.replaceAll('ヰ', 'ヰ');
+    // その他
+    text = text.replaceAll('hbar', 'ℏ');
+    text = text.replaceAll('angstrom', 'Å');
+    text = text.replaceAll('ohm', 'Ω');
+    text = text.replaceAll('delta', 'Δ'); // 大文字
+    text = text.replaceAll('Delta', 'Δ');
+    text = text.replaceAll('Sigma', 'Σ');
+    text = text.replaceAll('Pi', 'Π');
+    text = text.replaceAll('Omega', 'Ω');
+    text = text.replaceAll('Gamma', 'Γ');
+    text = text.replaceAll('Theta', 'Θ');
+    text = text.replaceAll('Lambda', 'Λ');
+    text = text.replaceAll('Phi', 'Φ');
+    text = text.replaceAll('Psi', 'Ψ');
+    text = text.replaceAll('Xi', 'Ξ');
+    return text;
+  }
+
   // カスタムマークダウンビルダー
   MarkdownStyleSheet _getMarkdownStyleSheet() {
     return MarkdownStyleSheet(
@@ -249,6 +338,8 @@ class _MarkdownMessageState extends State<MarkdownMessage> {
 
   /// マークダウンテキストを表示するウィジェットを生成
   Widget _buildMarkdownContent() {
+    final convertedText = _convertSuperscript(widget.message.text);
+
     if (!widget.isUserMessage && !_animationCompleted) {
       // AIメッセージでアニメーション表示中
       return AnimatedTextKit(
@@ -263,7 +354,7 @@ class _MarkdownMessageState extends State<MarkdownMessage> {
         },
         animatedTexts: [
           TypewriterAnimatedText(
-            widget.message.text,
+            convertedText,
             textStyle: GoogleFonts.notoSans(
               fontSize: 15.0,
               color: AppTheme.textPrimary,
@@ -303,7 +394,7 @@ class _MarkdownMessageState extends State<MarkdownMessage> {
                   // 右側：マークダウンコンテンツ
                   Expanded(
                     child: MarkdownBody(
-                      data: widget.message.text,
+                      data: convertedText,
                       styleSheet: _getMarkdownStyleSheet(),
                       selectable: true,
                       onTapLink: (text, href, title) {
@@ -448,6 +539,24 @@ class _MarkdownMessageState extends State<MarkdownMessage> {
                               );
                             },
                           ),
+                          const SizedBox(width: 8),
+                          _buildActionButton(
+                            context,
+                            Icons.picture_as_pdf,
+                            'PDFプレビュー',
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder:
+                                      (context) => PdfPreviewScreen(
+                                        markdownText: widget.message.text,
+                                      ),
+                                ),
+                              );
+                            },
+                          ),
+                          const SizedBox(width: 8),
                         ],
                       ),
                     ), // セパレータ
