@@ -7,7 +7,7 @@ import '../../../models/chat.dart';
 import '../../../services/chat_service.dart';
 import '../../../services/project_service.dart';
 import '../../../theme/app_theme.dart';
-import '../../../widgets/app_scaffold.dart';
+import '../../../widgets/common/app_scaffold.dart';
 import '../../chat_screens/chat_detail_screen/chat_detail_screen.dart';
 import '../../tag_screens/tag_list_screen/tag_list_screen.dart';
 import 'project_detail_create_chat_dialog.dart';

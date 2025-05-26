@@ -7,7 +7,7 @@ import '../../../models/chat.dart';
 import '../../../models/message.dart' as app_models;
 import '../../../services/chat_service.dart';
 import '../../../services/message_service.dart';
-import '../../../widgets/app_scaffold.dart';
+import '../../../widgets/common/app_scaffold.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'chat_detail_edit_title_dialog.dart';
 import 'chat_detail_clear_dialog.dart';

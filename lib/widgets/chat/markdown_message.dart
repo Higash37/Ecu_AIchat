@@ -4,11 +4,11 @@ import 'package:flutter_chat_types/flutter_chat_types.dart' as types;
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:animated_text_kit/animated_text_kit.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../theme/app_theme.dart';
-import '../models/quiz.dart';
-import 'quiz_widget.dart';
-import 'header_guideline.dart';
-import 'pdf_preview_screen.dart';
+import '../../theme/app_theme.dart';
+import '../../models/quiz.dart';
+import '../quiz/quiz_widget.dart';
+import '../header/header_guideline.dart';
+import '../pdf/pdf_preview_screen.dart';
 
 class MarkdownMessage extends StatefulWidget {
   final types.TextMessage message;

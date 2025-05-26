@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_chat_types/flutter_chat_types.dart' as types;
-import '../theme/app_theme.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
+import '../../theme/app_theme.dart';
 
 class ChatMessageBubble extends StatelessWidget {
   final types.TextMessage message;
@@ -11,6 +12,13 @@ class ChatMessageBubble extends StatelessWidget {
     required this.message,
     required this.isUserMessage,
   });
+
+  // 時間フォーマット用のヘルパーメソッドを追加
+  String _formatTime(DateTime time) {
+    final hour = time.hour.toString().padLeft(2, '0');
+    final minute = time.minute.toString().padLeft(2, '0');
+    return '$hour:$minute';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -36,7 +44,70 @@ class ChatMessageBubble extends StatelessWidget {
                       isUserMessage
                           ? AppTheme.userMessageBubble
                           : AppTheme.aiMessageBubble,
-                  child: Text(message.text, style: AppTheme.bodyText),
+                  child:
+                      isUserMessage
+                          ? Text(message.text, style: AppTheme.bodyText)
+                          : MarkdownBody(
+                            data: message.text,
+                            styleSheet: MarkdownStyleSheet(
+                              p: AppTheme.bodyText,
+                              code: TextStyle(
+                                fontFamily: 'monospace',
+                                backgroundColor: Colors.grey.shade200,
+                                fontSize: 14,
+                              ),
+                              h1: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                color: AppTheme.textPrimary,
+                              ),
+                              h2: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: AppTheme.textPrimary,
+                              ),
+                              h3: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: AppTheme.textPrimary,
+                              ),
+                              listBullet: TextStyle(
+                                color: AppTheme.primaryColor,
+                              ),
+                            ),
+                          ),
+                ),
+                // メッセージ時刻表示（LINE風）
+                Padding(
+                  padding: EdgeInsets.only(
+                    top: 2.0,
+                    left: isUserMessage ? 0 : 4.0,
+                    right: isUserMessage ? 4.0 : 0,
+                  ),
+                  child: Text(
+                    _formatTime(
+                      DateTime.fromMillisecondsSinceEpoch(
+                        message.createdAt ?? 0,
+                      ),
+                    ),
+                    style: TextStyle(fontSize: 10, color: Colors.grey.shade500),
+                  ),
+                ),
+                // メッセージ時刻表示
+                Padding(
+                  padding: EdgeInsets.only(
+                    top: 2.0,
+                    left: isUserMessage ? 0 : 4.0,
+                    right: isUserMessage ? 4.0 : 0,
+                  ),
+                  child: Text(
+                    _formatTime(
+                      DateTime.fromMillisecondsSinceEpoch(
+                        message.createdAt ?? 0,
+                      ),
+                    ),
+                    style: TextStyle(fontSize: 10, color: Colors.grey.shade500),
+                  ),
                 ),
                 if (!isUserMessage)
                   Padding(
@@ -94,13 +165,29 @@ class ChatMessageBubble extends StatelessWidget {
   Widget _buildAvatar({required bool isAI}) {
     return Padding(
       padding: const EdgeInsets.only(top: 4),
-      child: CircleAvatar(
-        backgroundColor: isAI ? AppTheme.primaryColor : Colors.grey.shade300,
-        radius: 16,
-        child: Icon(
-          isAI ? Icons.smart_toy : Icons.person,
-          size: 16,
-          color: Colors.white,
+      child: Container(
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: CircleAvatar(
+          backgroundColor:
+              isAI
+                  ? AppTheme
+                      .primaryColor // AIのアバター色
+                  : Colors.grey.shade300, // ユーザーのアバター色
+          radius: 16,
+          child: Icon(
+            isAI ? Icons.smart_toy : Icons.person,
+            size: 16,
+            color: Colors.white,
+          ),
         ),
       ),
     );
@@ -119,7 +206,8 @@ class ChatMessageBubble extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         decoration: BoxDecoration(
           border: Border.all(color: Colors.grey.shade300),
-          borderRadius: BorderRadius.circular(4),
+          borderRadius: BorderRadius.circular(8),
+          color: Colors.grey.shade50,
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,

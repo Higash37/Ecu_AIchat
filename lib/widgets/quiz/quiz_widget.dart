@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../models/quiz.dart';
-import '../theme/app_theme.dart';
+import '../../models/quiz.dart';
+import '../../theme/app_theme.dart';
 
 class QuizWidget extends StatefulWidget {
   final Quiz quiz;
