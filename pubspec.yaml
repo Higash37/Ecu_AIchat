@@ -30,12 +30,12 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  flutter_chat_ui: 1.6.9
+  flutter_chat_ui: ^2.3.0
   flutter_chat_types: ^3.6.2
   flutter_dotenv: ^5.1.0
   http: ^1.4.0
-  uuid: ^3.0.7
-  supabase_flutter: ^1.10.17
+  uuid: ^4.5.1
+  supabase_flutter: ^2.9.0
   flutter_markdown: ^0.7.7+1
   animated_text_kit: ^4.2.3
   flutter_highlight: ^0.7.0
