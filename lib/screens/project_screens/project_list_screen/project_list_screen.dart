@@ -5,6 +5,8 @@ import '../../../services/project_service.dart';
 import '../../../theme/app_theme.dart';
 import '../../../widgets/app_scaffold.dart';
 import '../project_detail_screen/project_detail_screen.dart';
+import 'project_list_empty.dart';
+import 'project_list_item.dart';
 
 class ProjectListScreen extends StatefulWidget {
   final bool forSelection;
@@ -73,8 +75,35 @@ class _ProjectListScreenState extends State<ProjectListScreen> {
           _isLoading
               ? const Center(child: CircularProgressIndicator())
               : _projects.isEmpty
-              ? _buildEmptyState()
-              : _buildProjectList(),
+              ? ProjectListEmpty(
+                forSelection: widget.forSelection,
+                selectionPurpose: widget.selectionPurpose,
+              )
+              : ListView.builder(
+                padding: const EdgeInsets.all(16),
+                itemCount: _projects.length,
+                itemBuilder: (context, index) {
+                  final project = _projects[index];
+                  return ProjectListItem(
+                    project: project,
+                    forSelection: widget.forSelection,
+                    onTap: () {
+                      if (widget.forSelection) {
+                        Navigator.pop(context, project);
+                      } else {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder:
+                                (context) =>
+                                    ProjectDetailScreen(project: project),
+                          ),
+                        );
+                      }
+                    },
+                  );
+                },
+              ),
       floatingActionButton:
           widget.forSelection
               ? null
@@ -84,146 +113,6 @@ class _ProjectListScreenState extends State<ProjectListScreen> {
                 child: const Icon(Icons.add),
               ),
     );
-  }
-
-  Widget _buildEmptyState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.folder_open_outlined,
-            size: 80,
-            color: Colors.grey.shade400,
-          ),
-          const SizedBox(height: 16),
-          const Text(
-            'プロジェクトがありません',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Colors.grey,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            widget.forSelection
-                ? '現在利用可能なプロジェクトがありません'
-                : '右下の+ボタンから新しいプロジェクトを作成できます',
-            textAlign: TextAlign.center,
-            style: const TextStyle(color: Colors.grey),
-          ),
-          const SizedBox(height: 24),
-          if (!widget.forSelection)
-            ElevatedButton(
-              onPressed: () {
-                _showCreateProjectDialog(context);
-              },
-              style: AppTheme.primaryButton,
-              child: const Text('新規プロジェクト作成'),
-            ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildProjectList() {
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: _projects.length,
-      itemBuilder: (context, index) {
-        final project = _projects[index];
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 12),
-          child: Container(
-            decoration: AppTheme.cardDecoration,
-            child: ListTile(
-              contentPadding: const EdgeInsets.all(12),
-              leading: CircleAvatar(
-                backgroundColor: AppTheme.primaryColor.withOpacity(0.1),
-                child: Text(
-                  project.name.substring(0, 1).toUpperCase(),
-                  style: TextStyle(
-                    color: AppTheme.primaryColor,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-              title: Text(
-                project.name,
-                style: AppTheme.heading2.copyWith(fontSize: 18),
-              ),
-              subtitle: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: 4),
-                  Text(
-                    project.description ?? '（説明なし）',
-                    style: AppTheme.caption,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.calendar_today,
-                        size: 12,
-                        color: AppTheme.textLight,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        '作成日: ${_formatDate(project.createdAt)}',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: AppTheme.textLight,
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Icon(
-                        Icons.chat_bubble_outline,
-                        size: 12,
-                        color: AppTheme.textLight,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        'チャット数: ${project.chatCount ?? 0}',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: AppTheme.textLight,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-              trailing: const Icon(
-                Icons.arrow_forward_ios,
-                color: AppTheme.primaryColor,
-              ),
-              onTap: () {
-                if (widget.forSelection) {
-                  Navigator.pop(context, project);
-                } else {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder:
-                          (context) => ProjectDetailScreen(project: project),
-                    ),
-                  );
-                }
-              },
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  String _formatDate(DateTime? date) {
-    if (date == null) return '不明';
-    return '${date.year}/${date.month}/${date.day}';
   }
 
   void _showCreateProjectDialog(BuildContext context) {
