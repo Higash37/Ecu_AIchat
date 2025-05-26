@@ -3,14 +3,14 @@ import 'package:flutter_chat_types/flutter_chat_types.dart' as types;
 import 'package:uuid/uuid.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import '../models/chat.dart';
-import '../models/message.dart' as app_models;
-import '../services/chat_service.dart';
-import '../services/message_service.dart';
-import '../theme/app_theme.dart';
-import '../widgets/app_scaffold.dart';
-import '../widgets/markdown_message.dart';
-import '../widgets/chat_input_field.dart';
+import '../../../models/chat.dart';
+import '../../../models/message.dart' as app_models;
+import '../../../services/chat_service.dart';
+import '../../../services/message_service.dart';
+import '../../../theme/app_theme.dart';
+import '../../../widgets/app_scaffold.dart';
+import '../../../widgets/markdown_message.dart';
+import '../../../widgets/chat_input_field.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ChatDetailScreen extends StatefulWidget {

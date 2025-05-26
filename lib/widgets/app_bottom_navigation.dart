@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
-import '../screens/project_list_screen.dart';
-import '../screens/chat_list_screen.dart';
-import '../screens/chat_screen.dart';
-import '../screens/tag_list_screen.dart';
+import '../screens/project_screens/project_list_screen/project_list_screen.dart';
+import '../screens/chat_screens/chat_list_screen/chat_list_screen.dart';
+import '../screens/chat_screens/chat_screen/chat_screen.dart';
+import '../screens/tag_screens/tag_list_screen/tag_list_screen.dart';
 
 class AppBottomNavigation extends StatelessWidget {
   final int currentIndex;

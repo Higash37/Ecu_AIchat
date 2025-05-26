@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:uuid/uuid.dart';
-import '../models/chat.dart';
-import '../services/chat_service.dart';
-import '../theme/app_theme.dart';
-import '../widgets/app_scaffold.dart';
-import '../screens/chat_detail_screen.dart';
+import '../../../models/chat.dart';
+import '../../../services/chat_service.dart';
+import '../../../theme/app_theme.dart';
+import '../../../widgets/app_scaffold.dart';
+import '../chat_detail_screen/chat_detail_screen.dart';
 
 class ChatListScreen extends StatefulWidget {
   final String? projectId; // プロジェクトに紐づくチャットのみ表示（nullの場合は全表示）

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
-import '../models/project.dart';
-import '../services/project_service.dart';
-import '../theme/app_theme.dart';
-import '../widgets/app_scaffold.dart';
-import 'project_detail_screen.dart';
+import '../../../models/project.dart';
+import '../../../services/project_service.dart';
+import '../../../theme/app_theme.dart';
+import '../../../widgets/app_scaffold.dart';
+import '../project_detail_screen/project_detail_screen.dart';
 
 class ProjectListScreen extends StatefulWidget {
   final bool forSelection;

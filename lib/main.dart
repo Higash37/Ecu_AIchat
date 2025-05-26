@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'screens/project_list_screen.dart';
+import 'screens/project_screens/project_list_screen/project_list_screen.dart';
 import 'theme/app_theme.dart';
 
 Future<void> main() async {
