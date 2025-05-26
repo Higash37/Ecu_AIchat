@@ -7,11 +7,13 @@ import '../../../models/chat.dart';
 import '../../../models/message.dart' as app_models;
 import '../../../services/chat_service.dart';
 import '../../../services/message_service.dart';
-import '../../../theme/app_theme.dart';
 import '../../../widgets/app_scaffold.dart';
-import '../../../widgets/markdown_message.dart';
-import '../../../widgets/chat_input_field.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'chat_detail_edit_title_dialog.dart';
+import 'chat_detail_clear_dialog.dart';
+import 'chat_detail_options_sheet.dart';
+import 'chat_detail_content.dart';
+import 'chat_detail_sidebar.dart';
 
 class ChatDetailScreen extends StatefulWidget {
   final String chatId;
@@ -242,7 +244,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                 children: [
                   // 左側：チャット履歴サイドバー（全体の30%）
                   Container(
-                    width: screenWidth * 0.3, // 画面幅の30%
+                    width: screenWidth * 0.3,
                     decoration: BoxDecoration(
                       border: Border(
                         right: BorderSide(
@@ -252,223 +254,28 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                       ),
                       color: Colors.grey.shade50,
                     ),
-                    child: Column(
-                      children: [
-                        // サイドバーヘッダー
-                        Container(
-                          padding: const EdgeInsets.all(16),
-                          color: Colors.white,
-                          child: Row(
-                            children: [
-                              const Icon(
-                                Icons.history,
-                                color: AppTheme.primaryColor,
-                              ),
-                              const SizedBox(width: 8),
-                              Text(
-                                'チャット履歴',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: AppTheme.primaryColor,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-
-                        // ここに履歴リストを表示する場合は追加
-                        // 現状では空の領域として表示
-                        Expanded(
-                          child: Center(
-                            child: Text(
-                              '他の会話履歴',
-                              style: TextStyle(
-                                color: Colors.grey.shade500,
-                                fontStyle: FontStyle.italic,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
+                    child: const ChatDetailSidebar(),
+                  ),
+                  // 右側：チャット本体（全体の70%）
+                  Expanded(
+                    child: ChatDetailContent(
+                      messages: _messages,
+                      isSending: _isSending,
+                      onSendPressed: _onSendPressed,
+                      user: _user,
+                      bot: _bot,
                     ),
                   ),
-
-                  // 右側：チャット本体（全体の70%）
-                  Expanded(child: _buildChatContent()),
                 ],
               )
               // モバイルレイアウト - 全画面表示
-              : _buildChatContent(),
-    );
-  }
-
-  // チャットのメインコンテンツを構築
-  Widget _buildChatContent() {
-    return Column(
-      children: [
-        // AIアシスタントヘッダー（ChatGPT風）
-        Container(
-          color: Colors.white,
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          child: Row(
-            children: [
-              CircleAvatar(
-                backgroundColor: AppTheme.primaryColor.withAlpha(
-                  (0.15 * 255).round(),
-                ),
-                radius: 20,
-                child: const Icon(
-                  Icons.smart_toy,
-                  color: AppTheme.primaryColor,
-                ),
+              : ChatDetailContent(
+                messages: _messages,
+                isSending: _isSending,
+                onSendPressed: _onSendPressed,
+                user: _user,
+                bot: _bot,
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      "AI アシスタント",
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: AppTheme.primaryColor,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      "学習のサポートをします",
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey.shade600,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-        // 区切り線
-        Divider(
-          height: 1,
-          thickness: 1,
-          color: Colors.grey.withAlpha((0.2 * 255).round()),
-        ),
-        // チャットメッセージ表示エリア
-        Expanded(
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              // PCとタブレット用の条件（画面幅が広い場合）
-              final isWideScreen = constraints.maxWidth > 600;
-              final contentWidth =
-                  isWideScreen
-                      ? constraints.maxWidth *
-                          0.7 // 画面幅の70%
-                      : constraints.maxWidth; // スマホでは全幅
-
-              return Center(
-                child: SizedBox(
-                  width: contentWidth,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: AppTheme.backgroundColor,
-                      image: DecorationImage(
-                        image: const AssetImage('assets/images/chat_bg.png'),
-                        repeat: ImageRepeat.repeat,
-                        opacity: 0.08,
-                      ),
-                    ),
-                    child:
-                        _messages.isEmpty
-                            ? Center(
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(
-                                    Icons.chat_bubble_outline,
-                                    size: 80,
-                                    color: Colors.grey.shade400,
-                                  ),
-                                  const SizedBox(height: 16),
-                                  const Text(
-                                    'メッセージがありません',
-                                    style: TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.grey,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  const Text(
-                                    '下のテキスト欄からメッセージを送信してください',
-                                    style: TextStyle(color: Colors.grey),
-                                  ),
-                                ],
-                              ),
-                            )
-                            : Stack(
-                              children: [
-                                ListView.builder(
-                                  reverse: true,
-                                  padding: const EdgeInsets.only(
-                                    top: 16,
-                                    bottom: 16,
-                                  ),
-                                  itemCount: _messages.length,
-                                  itemBuilder: (context, index) {
-                                    final message =
-                                        _messages[index] as types.TextMessage;
-                                    final isUserMessage =
-                                        message.author.id == _user.id;
-                                    return MarkdownMessage(
-                                      message: message,
-                                      isUserMessage: isUserMessage,
-                                    );
-                                  },
-                                ),
-                                if (_isSending)
-                                  Positioned(
-                                    bottom: 0,
-                                    left: 0,
-                                    right: 0,
-                                    child: Container(
-                                      color: Colors.white.withAlpha(
-                                        (0.8 * 255).round(),
-                                      ),
-                                      padding: const EdgeInsets.all(16),
-                                      child: Row(
-                                        children: [
-                                          const SizedBox(
-                                            width: 20,
-                                            height: 20,
-                                            child: CircularProgressIndicator(
-                                              strokeWidth: 2,
-                                              color: AppTheme.primaryColor,
-                                            ),
-                                          ),
-                                          const SizedBox(width: 16),
-                                          Text(
-                                            'AIが回答を考えています...',
-                                            style: TextStyle(
-                                              color: Colors.grey.shade800,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                              ],
-                            ),
-                  ),
-                ),
-              );
-            },
-          ),
-        ),
-        // 入力エリア
-        ChatInputField(onSendPressed: _onSendPressed),
-      ],
     );
   }
 
@@ -481,42 +288,17 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
       showDragHandle: true,
       useSafeArea: true,
       builder: (context) {
-        return Padding(
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ListTile(
-                leading: const Icon(Icons.title),
-                title: const Text('タイトル変更'),
-                onTap: () {
-                  Navigator.pop(context);
-                  _showEditTitleDialog(context);
-                },
+        return ChatDetailOptionsSheet(
+          onEditTitle: () => _showEditTitleDialog(context),
+          onSavePdf: () {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('PDF生成機能は準備中です'),
+                behavior: SnackBarBehavior.floating,
               ),
-              ListTile(
-                leading: const Icon(Icons.picture_as_pdf),
-                title: const Text('PDFとして保存'),
-                onTap: () {
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('PDF生成機能は準備中です'),
-                      behavior: SnackBarBehavior.floating,
-                    ),
-                  );
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.delete_outline),
-                title: const Text('チャット履歴をクリア'),
-                onTap: () {
-                  Navigator.pop(context);
-                  _showClearConfirmation(context);
-                },
-              ),
-            ],
-          ),
+            );
+          },
+          onClear: () => _showClearConfirmation(context),
         );
       },
     );
@@ -524,73 +306,51 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
 
   void _showEditTitleDialog(BuildContext context) {
     final titleController = TextEditingController(text: _chat.title);
-
     showDialog(
       context: context,
       barrierDismissible: true,
       useRootNavigator: false,
       builder:
-          (context) => AlertDialog(
-            title: const Text('チャットタイトル変更'),
-            titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
-            content: TextField(
-              controller: titleController,
-              decoration: const InputDecoration(
-                labelText: 'タイトル',
-                border: OutlineInputBorder(),
-              ),
-              autofocus: true,
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('キャンセル'),
-              ),
-              FilledButton(
-                onPressed: () async {
-                  final title = titleController.text.trim();
-                  if (title.isEmpty) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('タイトルを入力してください'),
-                        behavior: SnackBarBehavior.floating,
-                      ),
-                    );
-                    return;
-                  }
-
-                  Navigator.pop(context);
-
-                  try {
-                    await _chatService.updateChatTitle(widget.chatId, title);
-                    setState(() {
-                      _chat = Chat(
-                        id: _chat.id,
-                        projectId: _chat.projectId,
-                        title: title,
-                        createdAt: _chat.createdAt,
-                        updatedAt: _chat.updatedAt,
-                        lastMessage: _chat.lastMessage,
-                        messageCount: _chat.messageCount,
-                      );
-                    });
-
-                    if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('タイトルを更新しました')),
-                      );
-                    }
-                  } catch (e) {
-                    if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('タイトル更新に失敗しました: $e')),
-                      );
-                    }
-                  }
-                },
-                child: const Text('更新'),
-              ),
-            ],
+          (context) => ChatDetailEditTitleDialog(
+            controller: titleController,
+            onUpdate: () async {
+              final title = titleController.text.trim();
+              if (title.isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('タイトルを入力してください'),
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+                return;
+              }
+              Navigator.pop(context);
+              try {
+                await _chatService.updateChatTitle(widget.chatId, title);
+                setState(() {
+                  _chat = Chat(
+                    id: _chat.id,
+                    projectId: _chat.projectId,
+                    title: title,
+                    createdAt: _chat.createdAt,
+                    updatedAt: _chat.updatedAt,
+                    lastMessage: _chat.lastMessage,
+                    messageCount: _chat.messageCount,
+                  );
+                });
+                if (mounted) {
+                  ScaffoldMessenger.of(
+                    context,
+                  ).showSnackBar(const SnackBar(content: Text('タイトルを更新しました')));
+                }
+              } catch (e) {
+                if (mounted) {
+                  ScaffoldMessenger.of(
+                    context,
+                  ).showSnackBar(SnackBar(content: Text('タイトル更新に失敗しました: $e')));
+                }
+              }
+            },
           ),
     );
   }
@@ -601,48 +361,30 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
       barrierDismissible: true,
       useRootNavigator: false,
       builder:
-          (context) => AlertDialog(
-            title: const Text('チャット履歴をクリア'),
-            content: const Text('すべてのメッセージが削除されます。この操作は取り消せません。'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('キャンセル'),
-              ),
-              FilledButton(
-                onPressed: () async {
-                  Navigator.pop(context);
-
-                  try {
-                    // TODO: メッセージクリア機能実装
-                    // await _messageService.deleteAllMessages(widget.chatId);
-
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('チャット履歴を削除しました'),
-                        behavior: SnackBarBehavior.floating,
-                      ),
-                    );
-
-                    setState(() {
-                      _messages.clear();
-                    });
-                  } catch (e) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('チャット履歴の削除に失敗しました: $e'),
-                        behavior: SnackBarBehavior.floating,
-                      ),
-                    );
-                  }
-                },
-                style: ButtonStyle(
-                  backgroundColor: WidgetStateProperty.all(Colors.red),
-                  foregroundColor: WidgetStateProperty.all(Colors.white),
-                ),
-                child: const Text('クリア'),
-              ),
-            ],
+          (context) => ChatDetailClearDialog(
+            onClear: () async {
+              Navigator.pop(context);
+              try {
+                // TODO: メッセージクリア機能実装
+                // await _messageService.deleteAllMessages(widget.chatId);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('チャット履歴を削除しました'),
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+                setState(() {
+                  _messages.clear();
+                });
+              } catch (e) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('チャット履歴の削除に失敗しました: $e'),
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+              }
+            },
           ),
     );
   }
