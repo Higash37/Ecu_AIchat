@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_chat_types/flutter_chat_types.dart' as types;
 import '../../../theme/app_theme.dart';
-import '../../../widgets/chat/markdown_message.dart';
+import '../../../widgets/markdown/markdown_message.dart';
 import '../../../widgets/chat/chat_input_field.dart';
 
 class ChatDetailContent extends StatelessWidget {
