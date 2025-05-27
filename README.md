@@ -23,7 +23,7 @@
 
 - flutter_chat_ui + flutter_chat_types によるチャット UI
 - Supabase Flutter SDK によるリアルタイム DB 接続
-- .env による環境変数管理（flutter_dotenv）
+- String.fromEnvironment によるコンパイル時環境変数管理
 
 ### バックエンド（FastAPI）
 
@@ -73,17 +73,23 @@
 
 ### 3. Flutter（フロントエンド）
 
-- ルートに `.env` を作成：
-
-  ```env
-  SUPABASE_URL=xxxxx
-  SUPABASE_ANON_KEY=xxxxx
-  ```
-
-- 起動：
+- 環境変数をビルド時に指定して起動：
 
   ```bash
-  flutter run -d chrome
+  # 開発環境
+  flutter run -d chrome --dart-define=SUPABASE_URL=xxxxx --dart-define=SUPABASE_ANON_KEY=xxxxx
+
+  # または設定ファイルから環境変数を読み込む場合
+  flutter run -d chrome --dart-define-from-file=env.json
+  ```
+
+- env.json の例：
+
+  ```json
+  {
+    "SUPABASE_URL": "https://your-supabase-project.supabase.co",
+    "SUPABASE_ANON_KEY": "your-supabase-anon-key"
+  }
   ```
 
 ## ディレクトリ構成（Flutter）
