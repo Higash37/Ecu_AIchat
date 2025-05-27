@@ -13,10 +13,10 @@ load_dotenv(os.path.join(root_dir, '.env'))
 
 app = FastAPI()
 
-# ✅ CORS設定（Flutter Web のポート許可）
+# ✅ CORS設定（Flutter Web・モバイル・本番環境すべて許可）
 app.add_middleware(
     CORSMiddleware,
-    allow_origin_regex=r"http://localhost:\d+",
+    allow_origins=["*"],  # 本番環境では適切なオリジンに制限することを推奨
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -24,6 +24,14 @@ app.add_middleware(
 
 # ✅ OpenAIクライアント（.envファイルからOPENAI_API_KEYを読み込み）
 client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+
+@app.get("/")
+async def health_check():
+    """
+    スリープ防止用のヘルスチェックエンドポイント
+    定期的なping用に使用します
+    """
+    return {"status": "ok", "message": "API is running"}
 
 @app.post("/chat")
 async def chat(request: Request):

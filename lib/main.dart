@@ -4,6 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 import 'screens/chat_screens/chat_screen/chat_screen.dart';
 import 'theme/app_theme.dart';
+import 'env.dart'; // 環境設定クラスをインポート
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -22,9 +23,12 @@ Future<void> main() async {
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
-
   @override
   Widget build(BuildContext context) {
+    // 環境設定の情報をコンソールに出力（デバッグ用）
+    print('🌐 環境情報: ${AppConfig.envName}');
+    print('🔗 API URL: ${AppConfig.apiBaseUrl}');
+
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       theme: AppTheme.themeData,

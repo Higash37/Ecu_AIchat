@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: aiedu-backend
+    runtime: docker
+    plan: free
+    autoDeploy: true
+    buildCommand: ""
+    startCommand: uvicorn main:app --host 0.0.0.0 --port 8000
+    rootDir: ai_edu_api

@@ -14,6 +14,7 @@ import 'chat_detail_clear_dialog.dart';
 import 'chat_detail_options_sheet.dart';
 import 'chat_detail_content.dart';
 import 'chat_detail_sidebar.dart';
+import '../../../env.dart'; // 環境設定クラスをインポート
 
 class ChatDetailScreen extends StatefulWidget {
   final String chatId;
@@ -195,11 +196,10 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                 'content': m.content,
               },
             )
-            .toList();
-    // 今回のユーザー入力も追加
+            .toList(); // 今回のユーザー入力も追加
     messagesForAI.add({'role': 'user', 'content': userInput});
 
-    final uri = Uri.parse('http://127.0.0.1:8000/chat');
+    final uri = Uri.parse('${AppConfig.apiBaseUrl}/chat');
     final response = await http.post(
       uri,
       headers: {'Content-Type': 'application/json'},
