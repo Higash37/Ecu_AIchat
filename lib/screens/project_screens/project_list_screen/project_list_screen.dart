@@ -64,10 +64,10 @@ class _ProjectListScreenState extends State<ProjectListScreen> {
         widget.forSelection
             ? '${widget.selectionPurpose ?? "選択"}するプロジェクトを選択'
             : 'プロジェクト一覧';
-
     return AppScaffold(
       title: title,
       currentNavIndex: 0,
+      showBottomNav: false, // ボトムナビゲーションを非表示
       actions: [
         IconButton(icon: const Icon(Icons.refresh), onPressed: _loadProjects),
       ],

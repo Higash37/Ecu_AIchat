@@ -3,6 +3,10 @@ import '../../models/quiz.dart';
 /// クイズ生成ユーティリティ
 class QuizGenerator {
   static List<Quiz> generateQuizzesFromMessage(String messageText) {
+    // 一時的にクイズ機能を無効化
+    return [];
+
+    /* 元の実装（一時的にコメントアウト）
     final List<Quiz> quizzes = [];
     final lowerText = messageText.toLowerCase();
     // プログラミング関連のクイズ
@@ -14,8 +18,10 @@ class QuizGenerator {
       quizzes.add(_createLiteratureQuiz());
     }
     return quizzes;
+    */
   }
 
+  /* 元の実装（一時的にコメントアウト）
   static Quiz _createProgrammingQuiz() {
     return Quiz(
       question: 'Flutterのメイン開発言語は何ですか？',
@@ -82,4 +88,5 @@ class QuizGenerator {
       ],
     );
   }
+  */
 }

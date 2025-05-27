@@ -42,6 +42,7 @@ dependencies:
   google_fonts: ^6.2.1
   printing: ^5.14.2
   pdf: ^3.11.3
+  intl: ^0.19.0
 
 dev_dependencies:
   flutter_test:
@@ -72,23 +73,63 @@ flutter:
 
   # For details regarding adding assets from package dependencies, see
   # https://flutter.dev/to/asset-from-package
-
   # To add custom fonts to your application, add a fonts section here,
   # in this "flutter" section. Each entry in this list should have a
   # "family" key with the font family name, and a "fonts" key with a
-  # list giving the asset and other descriptors for the font. For
-  # example:
-  # fonts:
-  #   - family: Schyler
-  #     fonts:
-  #       - asset: fonts/Schyler-Regular.ttf
-  #       - asset: fonts/Schyler-Italic.ttf
-  #         style: italic
-  #   - family: Trajan Pro
-  #     fonts:
-  #       - asset: fonts/TrajanPro.ttf
-  #       - asset: fonts/TrajanPro_Bold.ttf
-  #         weight: 700
-  #
+  # list giving the asset and other descriptors for the font.
+  fonts:
+    - family: NotoSansJP
+      fonts:
+        - asset: assets/fonts/Noto_Sans_JP,Zen_Maru_Gothic/Noto_Sans_JP/static/NotoSansJP-Thin.ttf
+          weight: 100
+        - asset: assets/fonts/Noto_Sans_JP,Zen_Maru_Gothic/Noto_Sans_JP/static/NotoSansJP-ExtraLight.ttf
+          weight: 200
+        - asset: assets/fonts/Noto_Sans_JP,Zen_Maru_Gothic/Noto_Sans_JP/static/NotoSansJP-Light.ttf
+          weight: 300
+        - asset: assets/fonts/Noto_Sans_JP,Zen_Maru_Gothic/Noto_Sans_JP/static/NotoSansJP-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Noto_Sans_JP,Zen_Maru_Gothic/Noto_Sans_JP/static/NotoSansJP-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Noto_Sans_JP,Zen_Maru_Gothic/Noto_Sans_JP/static/NotoSansJP-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Noto_Sans_JP,Zen_Maru_Gothic/Noto_Sans_JP/static/NotoSansJP-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/Noto_Sans_JP,Zen_Maru_Gothic/Noto_Sans_JP/static/NotoSansJP-ExtraBold.ttf
+          weight: 800
+        - asset: assets/fonts/Noto_Sans_JP,Zen_Maru_Gothic/Noto_Sans_JP/static/NotoSansJP-Black.ttf
+          weight: 900
+
+    - family: ZenMaruGothic
+      fonts:
+        - asset: assets/fonts/Noto_Sans_JP,Zen_Maru_Gothic/Zen_Maru_Gothic/ZenMaruGothic-Light.ttf
+          weight: 300
+        - asset: assets/fonts/Noto_Sans_JP,Zen_Maru_Gothic/Zen_Maru_Gothic/ZenMaruGothic-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Noto_Sans_JP,Zen_Maru_Gothic/Zen_Maru_Gothic/ZenMaruGothic-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Noto_Sans_JP,Zen_Maru_Gothic/Zen_Maru_Gothic/ZenMaruGothic-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/Noto_Sans_JP,Zen_Maru_Gothic/Zen_Maru_Gothic/ZenMaruGothic-Black.ttf
+          weight: 900
+
+    - family: NotoSerifJP
+      fonts:
+        - asset: assets/fonts/Noto_Serif_JP/static/NotoSerifJP-ExtraLight.ttf
+          weight: 200
+        - asset: assets/fonts/Noto_Serif_JP/static/NotoSerifJP-Light.ttf
+          weight: 300
+        - asset: assets/fonts/Noto_Serif_JP/static/NotoSerifJP-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Noto_Serif_JP/static/NotoSerifJP-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Noto_Serif_JP/static/NotoSerifJP-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Noto_Serif_JP/static/NotoSerifJP-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/Noto_Serif_JP/static/NotoSerifJP-ExtraBold.ttf
+          weight: 800
+        - asset: assets/fonts/Noto_Serif_JP/static/NotoSerifJP-Black.ttf
+          weight: 900
+
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package

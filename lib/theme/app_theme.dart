@@ -19,25 +19,31 @@ class AppTheme {
     blurRadius: 8,
     offset: const Offset(0, 2),
   );
-
   // テキストスタイル
   static const TextStyle heading1 = TextStyle(
     fontSize: 24,
     fontWeight: FontWeight.bold,
     color: textPrimary,
+    fontFamily: 'NotoSansJP',
   );
 
   static const TextStyle heading2 = TextStyle(
     fontSize: 20,
     fontWeight: FontWeight.bold,
     color: textPrimary,
+    fontFamily: 'NotoSansJP',
   );
 
-  static const TextStyle bodyText = TextStyle(fontSize: 16, color: textPrimary);
+  static const TextStyle bodyText = TextStyle(
+    fontSize: 16,
+    color: textPrimary,
+    fontFamily: 'NotoSansJP',
+  );
 
   static const TextStyle caption = TextStyle(
     fontSize: 14,
     color: textSecondary,
+    fontFamily: 'NotoSansJP',
   );
 
   // ボタンスタイル
@@ -115,12 +121,12 @@ class AppTheme {
     iconTheme: const IconThemeData(color: primaryColor),
     titleTextStyle: heading2,
   );
-
   // テーマデータ
   static ThemeData themeData = ThemeData(
     primaryColor: primaryColor,
     scaffoldBackgroundColor: backgroundColor,
     appBarTheme: appBarTheme,
+    fontFamily: 'NotoSansJP',
     textTheme: const TextTheme(
       displayLarge: heading1,
       displayMedium: heading2,

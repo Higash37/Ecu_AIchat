@@ -140,7 +140,10 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
                     ? ProjectDetailEmpty(
                       onCreateChat: () => _showCreateChatDialog(context),
                     )
-                    : ProjectDetailChatList(chats: _chats),
+                    : ProjectDetailChatList(
+                      chats: _chats,
+                      onDeleteChat: (chat) => _confirmDeleteChat(chat),
+                    ),
           ),
         ],
       ),
@@ -276,6 +279,54 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
             },
           ),
     );
+  }
+
+  // チャット削除の確認ダイアログを表示
+  void _confirmDeleteChat(Chat chat) {
+    showDialog(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            title: const Text('チャットを削除'),
+            content: Text('「${chat.title}」を削除しますか？この操作は元に戻せません。'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('キャンセル'),
+              ),
+              ElevatedButton(
+                onPressed: () async {
+                  Navigator.pop(context);
+                  await _deleteChat(chat.id);
+                },
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                child: const Text('削除'),
+              ),
+            ],
+          ),
+    );
+  }
+
+  // チャットを削除する
+  Future<void> _deleteChat(String chatId) async {
+    try {
+      final chatService = ChatService();
+      await chatService.deleteChat(chatId);
+
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('チャットを削除しました')));
+        // チャット一覧を再読み込み
+        _loadChats();
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('チャットの削除に失敗しました: $e')));
+      }
+    }
   }
 
   Widget _buildPdfGenerationSheet(BuildContext context) {

@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'screens/project_screens/project_list_screen/project_list_screen.dart';
+import 'package:uuid/uuid.dart';
+import 'screens/chat_screens/chat_screen/chat_screen.dart';
 import 'theme/app_theme.dart';
 
 Future<void> main() async {
@@ -28,7 +29,10 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: AppTheme.themeData,
       title: 'AI 教材チャット',
-      home: const ProjectListScreen(), // プロジェクト一覧画面から開始
+      home: ChatScreen(
+        chatId: const Uuid().v4(),
+        projectId: '',
+      ), // 新規チャット画面から開始
     );
   }
 }

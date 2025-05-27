@@ -5,6 +5,8 @@
     "fastapi",
     "gradlew",
     "Mapify",
+    "Maru",
+    "Noto",
     "peaceiris",
     "Schyler",
     "subosito",

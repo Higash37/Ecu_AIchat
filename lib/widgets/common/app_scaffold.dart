@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../theme/app_theme.dart';
-import 'app_drawer.dart';
+import 'app_drawer_new.dart'; // 新しいドロワーを使用
 import 'app_bottom_navigation.dart';
 
 class AppScaffold extends StatelessWidget {
@@ -11,7 +11,6 @@ class AppScaffold extends StatelessWidget {
   final Widget? floatingActionButton;
   final bool showDrawer;
   final bool showBottomNav;
-
   const AppScaffold({
     super.key,
     required this.title,
@@ -20,7 +19,7 @@ class AppScaffold extends StatelessWidget {
     this.actions,
     this.floatingActionButton,
     this.showDrawer = true,
-    this.showBottomNav = true,
+    this.showBottomNav = false, // デフォルトでボトムナビゲーションを表示しない
   });
 
   @override
@@ -35,7 +34,7 @@ class AppScaffold extends StatelessWidget {
         actions: actions,
         iconTheme: const IconThemeData(color: AppTheme.primaryColor),
       ),
-      drawer: showDrawer ? const AppDrawer() : null,
+      drawer: showDrawer ? const AppDrawerNew() : null,
       body: body,
       bottomNavigationBar:
           showBottomNav

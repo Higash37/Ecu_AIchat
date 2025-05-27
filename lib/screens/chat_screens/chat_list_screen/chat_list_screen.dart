@@ -146,11 +146,59 @@ class _ChatListScreenState extends State<ChatListScreen> {
     }
   }
 
+  // チャット削除の確認ダイアログを表示
+  void _confirmDeleteChat(Chat chat) {
+    showDialog(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            title: const Text('チャットを削除'),
+            content: Text('「${chat.title}」を削除しますか？この操作は元に戻せません。'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('キャンセル'),
+              ),
+              ElevatedButton(
+                onPressed: () async {
+                  Navigator.pop(context);
+                  await _deleteChat(chat.id);
+                },
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                child: const Text('削除'),
+              ),
+            ],
+          ),
+    );
+  }
+
+  // チャットを削除する
+  Future<void> _deleteChat(String chatId) async {
+    try {
+      await _chatService.deleteChat(chatId);
+
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('チャットを削除しました')));
+        // チャット一覧を再読み込み
+        _loadChats();
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('チャットの削除に失敗しました: $e')));
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return AppScaffold(
       title: _projectTitle,
       currentNavIndex: 1,
+      showBottomNav: false, // ボトムナビゲーションを非表示
       actions: [
         IconButton(icon: const Icon(Icons.refresh), onPressed: _loadChats),
       ],
@@ -248,6 +296,18 @@ class _ChatListScreenState extends State<ChatListScreen> {
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
+                      IconButton(
+                        icon: const Icon(
+                          Icons.delete_outline,
+                          size: 20,
+                          color: Colors.grey,
+                        ),
+                        onPressed: () => _confirmDeleteChat(chat),
+                        tooltip: 'チャットを削除',
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                      ),
+                      const SizedBox(width: 8),
                       if (chat.messageCount != null && chat.messageCount! > 0)
                         Container(
                           padding: const EdgeInsets.symmetric(

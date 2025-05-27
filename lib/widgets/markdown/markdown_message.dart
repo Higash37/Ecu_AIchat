@@ -7,7 +7,6 @@ import '../../theme/app_theme.dart';
 import '../../models/quiz.dart';
 import '../pdf/pdf_preview_screen.dart';
 import '../../utils/markdown_symbol_utils.dart';
-import '../../utils/quiz_generator.dart';
 import 'markdown_message_header.dart';
 import 'markdown_message_action_buttons.dart';
 import 'markdown_message_content.dart';
@@ -50,14 +49,14 @@ class _MarkdownMessageState extends State<MarkdownMessage> {
       });
     } else {
       _animationCompleted = true;
-    }
-
-    // AIメッセージの場合、クイズを生成
+    } // AIメッセージの場合、クイズを生成
+    /* 一時的にクイズ機能を無効化
     if (!widget.isUserMessage) {
       _quizzes.addAll(
         QuizGenerator.generateQuizzesFromMessage(widget.message.text),
       );
     }
+    */
   }
 
   // 理系・古字・上付き・下付き・ギリシャ文字・記号などの変換

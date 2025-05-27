@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import 'package:pdf/pdf.dart' as pdf;
@@ -29,6 +30,13 @@ class PdfPreviewScreen extends StatelessWidget {
               child: PdfPreview(
                 build: (format) async {
                   final doc = pw.Document();
+
+                  // 日本語フォントを読み込む
+                  final fontData = await rootBundle.load(
+                    'assets/fonts/Noto_Sans_JP,Zen_Maru_Gothic/Noto_Sans_JP/static/NotoSansJP-Regular.ttf',
+                  );
+                  final ttf = pw.Font.ttf(fontData.buffer.asByteData());
+
                   doc.addPage(
                     pw.Page(
                       build:
@@ -41,7 +49,10 @@ class PdfPreviewScreen extends StatelessWidget {
                                   padding: const pw.EdgeInsets.all(8),
                                   child: pw.Text(
                                     markdownText,
-                                    style: const pw.TextStyle(fontSize: 16),
+                                    style: pw.TextStyle(
+                                      fontSize: 16,
+                                      font: ttf,
+                                    ),
                                   ),
                                 ),
                               ),
@@ -66,6 +77,7 @@ class PdfPreviewScreen extends StatelessWidget {
                                             decoration:
                                                 pw.TextDecoration.underline,
                                             fontWeight: pw.FontWeight.bold,
+                                            font: ttf,
                                           ),
                                         ),
                                       ),
@@ -83,6 +95,7 @@ class PdfPreviewScreen extends StatelessWidget {
                                             // 緑（赤シートで隠れる色例）
                                             decoration:
                                                 pw.TextDecoration.underline,
+                                            font: ttf,
                                           ),
                                         ),
                                       ),
@@ -100,6 +113,7 @@ class PdfPreviewScreen extends StatelessWidget {
                                             fontWeight: pw.FontWeight.bold,
                                             decoration:
                                                 pw.TextDecoration.underline,
+                                            font: ttf,
                                           ),
                                         ),
                                       ),

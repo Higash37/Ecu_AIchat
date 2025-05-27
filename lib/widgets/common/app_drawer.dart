@@ -54,24 +54,34 @@ class AppDrawer extends StatelessWidget {
             ),
             _buildMenuItem(
               context,
-              title: 'プロジェクト一覧',
-              icon: Icons.folder,
-              screen: const ProjectListScreen(),
+              title: '新規チャット',
+              icon: Icons.add_circle_outline,
+              screen: ChatScreen(
+                chatId: Uuid().v4(),
+                projectId: '', // 空文字で渡す
+              ),
+              isPrimary: true, // 主要なアクション
             ),
+            const Divider(),
             _buildMenuItem(
               context,
               title: 'チャット履歴',
               icon: Icons.history,
-              screen: const ChatListScreen(),
+              isHeader: true, // セクションヘッダーとして扱う
             ),
             _buildMenuItem(
               context,
-              title: '新規チャット',
-              icon: Icons.chat_bubble,
-              screen: ChatScreen(
-                chatId: Uuid().v4(),
-                projectId: '', // 空文字で渡す
-              ), // projectIdも渡す
+              title: 'チャット一覧',
+              icon: Icons.chat_bubble_outline,
+              screen: const ChatListScreen(),
+              indented: true, // インデント表示
+            ),
+            const Divider(),
+            _buildMenuItem(
+              context,
+              title: 'プロジェクト',
+              icon: Icons.folder,
+              screen: const ProjectListScreen(),
             ),
             _buildMenuItem(
               context,
@@ -114,40 +124,57 @@ class AppDrawer extends StatelessWidget {
     required IconData icon,
     Widget? screen,
     bool isDisabled = false,
+    bool isPrimary = false, // 主要アクション（強調表示）
+    bool isHeader = false, // セクションヘッダー
+    bool indented = false, // インデント表示
   }) {
-    return ListTile(
-      leading: Icon(
-        icon,
-        color: isDisabled ? Colors.grey : const Color(0xFF6C63FF),
-      ),
-      title: Text(
-        title,
-        style: TextStyle(
-          color: isDisabled ? Colors.grey : Colors.black87,
-          fontWeight: FontWeight.w500,
-        ),
-      ),
-      onTap:
+    final Color activeColor =
+        isPrimary ? const Color(0xFF6C63FF) : const Color(0xFF6C63FF);
+    final TextStyle textStyle = TextStyle(
+      color:
           isDisabled
-              ? () {
-                Navigator.pop(context);
-                _showComingSoonToast(
-                  context,
-                  '${title.replaceAll('（準備中）', '')}機能は開発中です',
-                );
-              }
-              : () {
-                Navigator.pop(context);
-                if (screen != null) {
-                  Navigator.pushReplacement(
-                    context,
-                    PageRouteBuilder(
-                      pageBuilder: (_, __, ___) => screen,
-                      transitionDuration: Duration.zero,
-                    ),
-                  );
+              ? Colors.grey
+              : isHeader
+              ? Colors.grey.shade600
+              : Colors.black87,
+      fontWeight: isHeader || isPrimary ? FontWeight.bold : FontWeight.w500,
+      fontSize: isHeader ? 12 : null,
+    );
+
+    return Padding(
+      padding: EdgeInsets.only(left: indented ? 16.0 : 0),
+      child: ListTile(
+        dense: isHeader,
+        leading: Icon(
+          icon,
+          color: isDisabled ? Colors.grey : activeColor,
+          size: isPrimary ? 28 : null,
+        ),
+        title: Text(title, style: textStyle),
+        onTap:
+            isDisabled || isHeader
+                ? () {
+                  if (isDisabled) {
+                    Navigator.pop(context);
+                    _showComingSoonToast(
+                      context,
+                      '${title.replaceAll('（準備中）', '')}機能は開発中です',
+                    );
+                  }
                 }
-              },
+                : () {
+                  Navigator.pop(context);
+                  if (screen != null) {
+                    Navigator.pushReplacement(
+                      context,
+                      PageRouteBuilder(
+                        pageBuilder: (_, __, ___) => screen,
+                        transitionDuration: Duration.zero,
+                      ),
+                    );
+                  }
+                },
+      ),
     );
   }
 

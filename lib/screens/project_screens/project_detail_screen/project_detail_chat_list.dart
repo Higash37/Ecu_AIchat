@@ -8,7 +8,13 @@ import '../../chat_screens/chat_detail_screen/chat_detail_screen.dart';
 
 class ProjectDetailChatList extends StatelessWidget {
   final List<Chat> chats;
-  const ProjectDetailChatList({super.key, required this.chats});
+  final Function(Chat)? onDeleteChat; // 削除コールバックを追加
+
+  const ProjectDetailChatList({
+    super.key,
+    required this.chats,
+    this.onDeleteChat,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -81,9 +87,28 @@ class ProjectDetailChatList extends StatelessWidget {
                   ),
                 ],
               ),
-              trailing: const Icon(
-                Icons.arrow_forward_ios,
-                color: AppTheme.primaryColor,
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (onDeleteChat != null)
+                    IconButton(
+                      icon: const Icon(
+                        Icons.delete_outline,
+                        size: 20,
+                        color: Colors.grey,
+                      ),
+                      onPressed: () => onDeleteChat!(chat),
+                      tooltip: 'チャットを削除',
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                    ),
+                  const SizedBox(width: 8),
+                  const Icon(
+                    Icons.arrow_forward_ios,
+                    color: AppTheme.primaryColor,
+                    size: 18,
+                  ),
+                ],
               ),
               onTap: () {
                 Navigator.push(
