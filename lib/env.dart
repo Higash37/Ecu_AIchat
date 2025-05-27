@@ -2,7 +2,7 @@
 
 class AppConfig {
   // 開発中はtrueに設定し、公開時にはfalseに変更
-  static const bool isLocal = false;
+  static const bool isLocal = true;
 
   // APIのベースURL：ローカル開発時とRenderデプロイ時で切り替え
   static String get apiBaseUrl =>
@@ -14,13 +14,19 @@ class AppConfig {
   static String get envName => isLocal ? "開発環境" : "公開環境";
 
   // Supabase接続情報
-  static final String supabaseUrl = String.fromEnvironment(
-    'SUPABASE_URL',
-    defaultValue: 'https://your-supabase-project.supabase.co',
-  );
+  static final String supabaseUrl =
+      isLocal
+          ? 'http://localhost:54321' // ローカルSupabaseのURL（例）
+          : String.fromEnvironment(
+            'SUPABASE_URL',
+            defaultValue: 'https://your-supabase-project.supabase.co',
+          );
 
-  static final String supabaseAnonKey = String.fromEnvironment(
-    'SUPABASE_ANON_KEY',
-    defaultValue: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
-  );
+  static final String supabaseAnonKey =
+      isLocal
+          ? 'ローカル用のanonキー' // ローカル用のキー
+          : String.fromEnvironment(
+            'SUPABASE_ANON_KEY',
+            defaultValue: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
+          );
 }
