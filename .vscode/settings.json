@@ -22,5 +22,8 @@
   "python.defaultInterpreterPath": "${workspaceFolder}/ai_edu_api/venv/Scripts/python.exe",
   "python.analysis.extraPaths": [
     "${workspaceFolder}/ai_edu_api/venv/Lib/site-packages"
-  ]
+  ],
+  "powershell.startAutomatically": false,
+  "powershell.enableProfileLoading": false,
+  "powershell.integratedConsole.suppressStartupBanner": true
 }
