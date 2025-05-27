@@ -29,7 +29,7 @@
 
 - OpenAI GPT-4o API 連携（openai ライブラリ）
 - CORS 対応（Flutter と連携可能）
-- Docker による環境管理
+- Docker による環境管理をする
 
 ### DB（Supabase）
 
