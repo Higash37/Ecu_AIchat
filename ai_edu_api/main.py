@@ -1,7 +1,6 @@
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, StreamingResponse
-from dotenv import load_dotenv
 from openai import OpenAI
 from supabase import create_client, Client
 import os
@@ -10,10 +9,8 @@ import json
 from threading import Thread
 import time
 
-# プロジェクトルートディレクトリのパスを取得
+# プロジェクトルートディレクトリのパスを取得（今後使う場合のみ）
 root_dir = pathlib.Path(__file__).parent.parent.absolute()
-# ルートディレクトリの.envファイルを読み込む
-load_dotenv(os.path.join(root_dir, '.env'))
 
 app = FastAPI()
 

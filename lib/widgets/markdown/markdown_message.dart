@@ -439,12 +439,6 @@ class _MarkdownMessageState extends State<MarkdownMessage> {
                       ],
                     ),
 
-                  // --- モデル切り替えドロップダウン（ヘッダー右上） ---
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [_ModelSelector()],
-                  ),
-
                   // セパレータ
                   const SizedBox(height: 16),
                   const Divider(),
@@ -558,52 +552,5 @@ class _KnowledgeGraphMiniView extends StatelessWidget {
       );
     }
     return const SizedBox.shrink();
-  }
-}
-
-// --- モデル切り替え用ドロップダウン ---
-class _ModelSelector extends StatefulWidget {
-  @override
-  State<_ModelSelector> createState() => _ModelSelectorState();
-}
-
-class _ModelSelectorState extends State<_ModelSelector> {
-  String _selectedModel = 'gpt-4o';
-  final _models = const [
-    {'id': 'gpt-4o', 'label': 'GPT-4o'},
-    {'id': 'higash-ai', 'label': 'Higash-AI'},
-  ];
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-      decoration: BoxDecoration(
-        color: Colors.grey.shade100,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.grey.shade300),
-      ),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton<String>(
-          value: _selectedModel,
-          icon: const Icon(Icons.arrow_drop_down),
-          style: const TextStyle(fontSize: 13, color: Colors.black87),
-          items:
-              _models
-                  .map(
-                    (m) => DropdownMenuItem(
-                      value: m['id'],
-                      child: Text(m['label']!),
-                    ),
-                  )
-                  .toList(),
-          onChanged: (v) {
-            if (v != null) {
-              setState(() => _selectedModel = v);
-              // TODO: Providerやコールバックで親に通知し、モデル切り替えを反映
-            }
-          },
-        ),
-      ),
-    );
   }
 }
