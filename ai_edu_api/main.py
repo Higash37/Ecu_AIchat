@@ -214,15 +214,18 @@ async def chat(request: Request):
             emotion = "ニュートラル"
         print("GPT reply:", reply, "emotion:", emotion)
         # 生成結果をキャッシュ保存
-        supabase.table("chat_qa_cache").insert({
-            "user_id": user_id,
-            "model": model,
-            "question": question,
-            "context": context,
-            "answer": reply,
-            "emotion": emotion,
-            "creative": creative_result
-        }).execute()
+        if user_id:
+            supabase.table("chat_qa_cache").insert({
+                "user_id": user_id,
+                "model": model,
+                "question": question,
+                "context": context,
+                "answer": reply,
+                "emotion": emotion,
+                "creative": creative_result
+            }).execute()
+        else:
+            print("[警告] user_id が未指定のため、キャッシュ保存をスキップしました")
         return JSONResponse(content={
             "reply": reply,
             "emotion": emotion,
