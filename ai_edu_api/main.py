@@ -146,12 +146,12 @@ async def chat(request: Request):
     cache_query = supabase.table("chat_qa_cache").select("*") \
         .eq("user_id", user_id) \
         .eq("model", model) \
-        .eq("question", question) \
-        .eq("count", count) \
-        .eq("layout", layout)
-    # context条件も一時的に外す（PostgRESTの配列/JSONB比較制約回避）
-    # if context:
-    #     cache_query = cache_query.eq("context", context)
+        .eq("question", question)
+    # NULL対応: contextがNoneのときはIS NULLで比較
+    if context is not None:
+        cache_query = cache_query.eq("context", context)
+    else:
+        cache_query = cache_query.is_("context", None)
     cache_result = cache_query.execute()
     if cache_result.data and len(cache_result.data) > 0:
         cached = cache_result.data[0]
