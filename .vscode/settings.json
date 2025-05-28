@@ -5,6 +5,7 @@
     "dotenv",
     "fastapi",
     "gradlew",
+    "higash",
     "Mapify",
     "Maru",
     "Noto",

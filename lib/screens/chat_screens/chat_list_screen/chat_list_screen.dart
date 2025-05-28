@@ -11,7 +11,14 @@ import 'delete_chat_dialog.dart';
 
 class ChatListScreen extends StatefulWidget {
   final String? projectId;
-  const ChatListScreen({super.key, this.projectId});
+  final List<Chat>? prefetchedChats;
+  final Map<String, dynamic>? prefetchedUser;
+  const ChatListScreen({
+    super.key,
+    this.projectId,
+    this.prefetchedChats,
+    this.prefetchedUser,
+  });
 
   @override
   State<ChatListScreen> createState() => _ChatListScreenState();
@@ -26,7 +33,13 @@ class _ChatListScreenState extends State<ChatListScreen> {
     super.initState();
     _controller = ChatListController(projectId: widget.projectId);
     _controller.addListener(_onControllerChanged);
-    _loadChats();
+    // プリフェッチがあれば即時反映
+    if (widget.prefetchedChats != null && widget.prefetchedChats!.isNotEmpty) {
+      _controller.chats = widget.prefetchedChats!;
+      _controller.isLoading = false;
+    } else {
+      _loadChats();
+    }
   }
 
   void _loadChats() async {

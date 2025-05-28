@@ -47,6 +47,7 @@ dependencies:
   path_provider: ^2.1.5
   hive_generator: ^2.0.1
   build_runner: ^2.4.15
+  characters: ^1.4.0
 
 dev_dependencies:
   flutter_test:

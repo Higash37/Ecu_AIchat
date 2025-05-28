@@ -3,6 +3,7 @@ import 'package:flutter_chat_types/flutter_chat_types.dart' as types;
 import 'package:uuid/uuid.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:characters/characters.dart';
 import '../../../models/chat.dart';
 import '../../../models/message.dart' as app_models;
 import '../../../services/chat_service.dart';
@@ -124,41 +125,74 @@ class ChatDetailController extends ChangeNotifier {
           content: message,
           createdAt: DateTime.now(),
           userId: null,
+          emotion: null,
         );
         await LocalCacheService.cacheMessages(chatId, [localMsg]);
         // AI返信もローカル保存
-        final aiReply = await _fetchAIResponse(message, '');
+        // --- ストリーム風表示（マルチバイト対応） ---
+        final aiRes = await _fetchAIResponseWithEmotion(message, '');
+        String aiReply = aiRes['reply'] ?? '';
+        String aiEmotion = aiRes['emotion'] ?? 'ニュートラル';
+        String display = '';
+        final aiMsgId = const Uuid().v4();
+        final aiMessage = types.TextMessage(
+          author: bot,
+          createdAt: DateTime.now().millisecondsSinceEpoch,
+          id: aiMsgId,
+          text: '',
+          metadata: {'emotion': aiEmotion},
+        );
+        messages.insert(0, aiMessage);
+        notifyListeners();
+        for (final char in aiReply.characters) {
+          display += char;
+          messages[0] =
+              (aiMessage.copyWith(text: display) as types.TextMessage);
+          notifyListeners();
+          await Future.delayed(const Duration(milliseconds: 12));
+        }
+        // 完了時にローカル保存
         final aiMsg = app_models.Message(
-          id: const Uuid().v4(),
+          id: aiMsgId,
           chatId: chatId,
           sender: 'ai',
           content: aiReply,
           createdAt: DateTime.now(),
           userId: null,
+          emotion: aiEmotion,
         );
         await LocalCacheService.cacheMessages(chatId, [localMsg, aiMsg]);
-        final aiMessage = types.TextMessage(
-          author: bot,
-          createdAt: DateTime.now().millisecondsSinceEpoch,
-          id: const Uuid().v4(),
-          text: aiReply,
-        );
-        messages.insert(0, aiMessage);
         isSending = false;
         notifyListeners();
         return;
       }
       // ログイン時はサーバーにメッセージを保存
-      await _saveUserMessage(message, currentUserId);
-      final aiReply = await _fetchAIResponse(message, currentUserId);
-      await _saveAIMessage(aiReply, currentUserId);
+      final aiRes = await _fetchAIResponseWithEmotion(message, currentUserId);
+      String aiReply = aiRes['reply'] ?? '';
+      String aiEmotion = aiRes['emotion'] ?? 'ニュートラル';
+      String display = '';
+      final aiMsgId = const Uuid().v4();
       final aiMessage = types.TextMessage(
         author: bot,
         createdAt: DateTime.now().millisecondsSinceEpoch,
-        id: const Uuid().v4(),
-        text: aiReply,
+        id: aiMsgId,
+        text: '',
+        metadata: {'emotion': aiEmotion},
       );
       messages.insert(0, aiMessage);
+      notifyListeners();
+      for (final char in aiReply.characters) {
+        display += char;
+        messages[0] = (aiMessage.copyWith(text: display) as types.TextMessage);
+        notifyListeners();
+        await Future.delayed(const Duration(milliseconds: 12));
+      }
+      await _messageService.saveAIMessage(
+        chatId: chatId,
+        content: aiReply,
+        userId: currentUserId,
+        emotion: aiEmotion,
+      );
       isSending = false;
       notifyListeners();
     } catch (e) {
@@ -168,34 +202,10 @@ class ChatDetailController extends ChangeNotifier {
     }
   }
 
-  Future<void> _saveUserMessage(String content, String userId) async {
-    final message = app_models.Message(
-      id: const Uuid().v4(),
-      chatId: chatId,
-      sender: 'user',
-      content: content,
-      createdAt: DateTime.now(),
-      userId: userId,
-    );
-    await _messageService.createMessage(message, userId);
-    await _chatService.incrementMessageCount(chatId);
-  }
-
-  Future<void> _saveAIMessage(String content, String userId) async {
-    final message = app_models.Message(
-      id: const Uuid().v4(),
-      chatId: chatId,
-      sender: 'ai',
-      content: content,
-      createdAt: DateTime.now(),
-      userId: userId,
-    );
-    await _messageService.createMessage(message, userId);
-    await _chatService.updateLastMessage(chatId, content);
-    await _chatService.incrementMessageCount(chatId);
-  }
-
-  Future<String> _fetchAIResponse(String userInput, String userId) async {
+  Future<Map<String, dynamic>> _fetchAIResponseWithEmotion(
+    String userInput,
+    String userId,
+  ) async {
     final history = await _messageService.fetchMessagesByChat(chatId, userId);
     final messagesForAI =
         history
@@ -217,11 +227,10 @@ class ChatDetailController extends ChangeNotifier {
       throw Exception('API error: ${response.statusCode}');
     }
     final json = jsonDecode(response.body);
-    final reply =
-        (json is Map && json.containsKey("reply"))
-            ? json["reply"]
-            : "[返答がありませんでした]";
-    return reply;
+    return {
+      'reply': json['reply'] ?? '',
+      'emotion': json['emotion'] ?? 'ニュートラル',
+    };
   }
 
   Future<void> reload() async {

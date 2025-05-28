@@ -35,9 +35,22 @@ class ChatDetailContent extends StatelessWidget {
                   (0.15 * 255).round(),
                 ),
                 radius: 20,
-                child: const Icon(
-                  Icons.smart_toy,
-                  color: AppTheme.primaryColor,
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 400),
+                  child:
+                      bot.id == 'higash-ai'
+                          ? Icon(
+                            Icons.auto_awesome,
+                            color: Colors.amber,
+                            size: 28,
+                            key: const ValueKey('higash-ai'),
+                          )
+                          : Icon(
+                            Icons.smart_toy,
+                            color: AppTheme.primaryColor,
+                            size: 28,
+                            key: const ValueKey('gpt-ai'),
+                          ),
                 ),
               ),
               const SizedBox(width: 12),

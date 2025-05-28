@@ -15,7 +15,9 @@ class Message {
   @HiveField(4)
   final DateTime createdAt;
   @HiveField(5)
-  final String? userId; // 追加: ユーザー識別子
+  final String? userId; // ユーザー識別子
+  @HiveField(6)
+  final String? emotion; // AI感情ラベル
 
   Message({
     required this.id,
@@ -24,6 +26,7 @@ class Message {
     required this.content,
     required this.createdAt,
     this.userId,
+    this.emotion,
   });
 
   factory Message.fromMap(Map<String, dynamic> map) {
@@ -34,6 +37,7 @@ class Message {
       content: map['content'],
       createdAt: DateTime.parse(map['created_at']),
       userId: map['user_id'],
+      emotion: map['emotion'],
     );
   }
 
@@ -45,6 +49,7 @@ class Message {
       'content': content,
       'created_at': createdAt.toIso8601String(),
       'user_id': userId,
+      'emotion': emotion,
     };
   }
 }

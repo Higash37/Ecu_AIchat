@@ -55,4 +55,22 @@ class MessageService {
     );
     await createMessage(message, userId);
   }
+
+  Future<void> saveAIMessage({
+    required String chatId,
+    required String content,
+    required String userId,
+    required String emotion,
+  }) async {
+    final message = Message(
+      id: Uuid().v4(),
+      chatId: chatId,
+      sender: 'ai',
+      content: content,
+      createdAt: DateTime.now(),
+      userId: userId,
+      emotion: emotion,
+    );
+    await createMessage(message, userId);
+  }
 }

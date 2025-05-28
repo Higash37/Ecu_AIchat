@@ -11,7 +11,15 @@ import 'chat_detail_controller.dart';
 class ChatDetailScreen extends StatefulWidget {
   final String chatId;
   final Chat? chat;
-  const ChatDetailScreen({super.key, required this.chatId, this.chat});
+  final Chat? prefetchedChat;
+  final Map<String, dynamic>? prefetchedUser;
+  const ChatDetailScreen({
+    super.key,
+    required this.chatId,
+    this.chat,
+    this.prefetchedChat,
+    this.prefetchedUser,
+  });
 
   @override
   State<ChatDetailScreen> createState() => _ChatDetailScreenState();
@@ -25,7 +33,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
     super.initState();
     _controller = ChatDetailController(
       chatId: widget.chatId,
-      initialChat: widget.chat,
+      initialChat: widget.prefetchedChat ?? widget.chat,
     );
     _controller.addListener(_onControllerChanged);
   }

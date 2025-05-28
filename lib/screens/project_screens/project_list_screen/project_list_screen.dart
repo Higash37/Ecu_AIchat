@@ -12,12 +12,16 @@ class ProjectListScreen extends StatefulWidget {
   final bool forSelection;
   final String? selectionPurpose;
   final String? navigationMode;
+  final List<Project>? prefetchedProjects;
+  final Map<String, dynamic>? prefetchedUser;
 
   const ProjectListScreen({
     super.key,
     this.forSelection = false,
     this.selectionPurpose,
     this.navigationMode,
+    this.prefetchedProjects,
+    this.prefetchedUser,
   });
 
   @override
@@ -33,7 +37,14 @@ class _ProjectListScreenState extends State<ProjectListScreen> {
   @override
   void initState() {
     super.initState();
-    _loadProjects();
+    // プリフェッチがあれば即時反映
+    if (widget.prefetchedProjects != null &&
+        widget.prefetchedProjects!.isNotEmpty) {
+      _projects = widget.prefetchedProjects!;
+      _isLoading = false;
+    } else {
+      _loadProjects();
+    }
   }
 
   Future<void> _loadProjects() async {

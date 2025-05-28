@@ -23,13 +23,14 @@ class MessageAdapter extends TypeAdapter<Message> {
       content: fields[3] as String,
       createdAt: fields[4] as DateTime,
       userId: fields[5] as String?,
+      emotion: fields[6] as String?,
     );
   }
 
   @override
   void write(BinaryWriter writer, Message obj) {
     writer
-      ..writeByte(6)
+      ..writeByte(7)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -41,7 +42,9 @@ class MessageAdapter extends TypeAdapter<Message> {
       ..writeByte(4)
       ..write(obj.createdAt)
       ..writeByte(5)
-      ..write(obj.userId);
+      ..write(obj.userId)
+      ..writeByte(6)
+      ..write(obj.emotion);
   }
 
   @override
