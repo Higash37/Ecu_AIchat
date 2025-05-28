@@ -32,5 +32,8 @@ analyzer:
     todo: ignore
     avoid_print: ignore
     depend_on_referenced_packages: ignore
+    prefer_interpolation_to_compose_strings: ignore
+    unnecessary_import: ignore
+    unnecessary_this: ignore
 # Additional information about this file can be found at
 # https://dart.dev/guides/language/analysis-options

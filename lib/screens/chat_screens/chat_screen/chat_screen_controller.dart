@@ -3,9 +3,9 @@ import 'package:flutter_chat_types/flutter_chat_types.dart' as types;
 import 'package:uuid/uuid.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../services/message_service.dart';
 import '../../../services/chat_service.dart';
+import '../../../services/local_cache_service.dart';
 import '../../../models/message.dart';
 import '../../../models/chat.dart';
 import '../../../env.dart';
@@ -50,6 +50,9 @@ class ChatScreenController extends ChangeNotifier {
     isLoading = true;
     notifyListeners();
     final uuidRegExp = RegExp(r'^[0-9a-fA-F\-]{36}\u0000?$');
+    final user = await LocalCacheService.getUserInfo();
+    final currentUserId = user?['user_id'] ?? '';
+    final isLoggedIn = currentUserId.isNotEmpty;
     if (!chatCreated) {
       if (projectId.isNotEmpty && !uuidRegExp.hasMatch(projectId)) {
         isLoading = false;
@@ -68,8 +71,13 @@ class ChatScreenController extends ChangeNotifier {
           updatedAt: DateTime.now(),
           lastMessage: '',
           messageCount: 0,
+          userId: isLoggedIn ? currentUserId : null,
         );
-        await _chatService.createChat(chat);
+        if (isLoggedIn) {
+          await _chatService.createChat(chat, currentUserId);
+        } else {
+          await LocalCacheService.cacheChats([chat]);
+        }
         chatCreated = true;
       } catch (e) {
         isLoading = false;
@@ -95,27 +103,29 @@ class ChatScreenController extends ChangeNotifier {
       notifyListeners();
       return;
     }
-    final currentUserId = Supabase.instance.client.auth.currentUser?.id;
-    await _messageService.createMessage(
-      Message(
-        id: Uuid().v4(),
-        chatId: chatId,
-        sender: 'user',
-        content: message,
-        createdAt: DateTime.now(),
-        userId: currentUserId,
-      ),
+    // --- 保存処理分岐 ---
+    final userMsg = Message(
+      id: Uuid().v4(),
+      chatId: chatId,
+      sender: 'user',
+      content: message,
+      createdAt: DateTime.now(),
+      userId: isLoggedIn ? currentUserId : null,
     );
-    await _messageService.createMessage(
-      Message(
-        id: Uuid().v4(),
-        chatId: chatId,
-        sender: 'ai',
-        content: aiReply,
-        createdAt: DateTime.now(),
-        userId: null,
-      ),
+    final aiMsg = Message(
+      id: Uuid().v4(),
+      chatId: chatId,
+      sender: 'ai',
+      content: aiReply,
+      createdAt: DateTime.now(),
+      userId: isLoggedIn ? currentUserId : null,
     );
+    if (isLoggedIn) {
+      await _messageService.createMessage(userMsg, currentUserId);
+      await _messageService.createMessage(aiMsg, currentUserId);
+    } else {
+      await LocalCacheService.cacheMessages(chatId, [userMsg, aiMsg]);
+    }
     final textMessage = types.TextMessage(
       author: _user,
       createdAt: DateTime.now().millisecondsSinceEpoch,
@@ -134,7 +144,7 @@ class ChatScreenController extends ChangeNotifier {
     if (messages.length <= 4) {
       // 最初の2往復でタイトル自動生成
       final autoTitle = await _generateChatTitle(message, aiReply);
-      if (autoTitle.isNotEmpty) {
+      if (autoTitle.isNotEmpty && isLoggedIn) {
         await _chatService.updateChatTitle(chatId, autoTitle);
       }
     }

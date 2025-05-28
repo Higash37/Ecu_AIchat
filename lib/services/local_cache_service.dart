@@ -52,4 +52,33 @@ class LocalCacheService {
     final box = await Hive.openBox<Message>(messageBoxPrefix + chatId);
     return box.values.toList();
   }
+
+  // --- ユーザー情報の永続化 ---
+  static const String userBoxName = 'user_info';
+  static const String userIdKey = 'user_id';
+  static const String nicknameKey = 'nickname';
+  static const String loginKey = 'is_logged_in';
+
+  static Future<void> saveUserInfo(String userId, String nickname) async {
+    final box = await Hive.openBox(userBoxName);
+    await box.put(userIdKey, userId);
+    await box.put(nicknameKey, nickname);
+    await box.put(loginKey, true);
+  }
+
+  static Future<Map<String, dynamic>?> getUserInfo() async {
+    final box = await Hive.openBox(userBoxName);
+    final userId = box.get(userIdKey);
+    final nickname = box.get(nicknameKey);
+    final isLoggedIn = box.get(loginKey, defaultValue: false);
+    if (userId != null && nickname != null && isLoggedIn == true) {
+      return {'user_id': userId, 'nickname': nickname};
+    }
+    return null;
+  }
+
+  static Future<void> clearUserInfo() async {
+    final box = await Hive.openBox(userBoxName);
+    await box.clear();
+  }
 }

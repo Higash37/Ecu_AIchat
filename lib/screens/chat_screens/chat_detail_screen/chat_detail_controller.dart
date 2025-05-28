@@ -8,7 +8,6 @@ import '../../../models/message.dart' as app_models;
 import '../../../services/chat_service.dart';
 import '../../../services/message_service.dart';
 import '../../../services/local_cache_service.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../env.dart';
 
 /// ChatDetailScreenのロジック・状態管理用コントローラー
@@ -36,7 +35,12 @@ class ChatDetailController extends ChangeNotifier {
     isLoading = true;
     notifyListeners();
     try {
-      final c = await _chatService.fetchChatById(chatId);
+      final user = await LocalCacheService.getUserInfo();
+      final userId = user?['user_id'];
+      final c =
+          userId != null
+              ? await _chatService.fetchChatById(chatId, userId)
+              : await _chatService.fetchChatById(chatId, '');
       chat = c;
       await _loadMessages();
     } catch (e) {
@@ -48,14 +52,20 @@ class ChatDetailController extends ChangeNotifier {
 
   Future<void> _loadMessages() async {
     try {
-      final fetched = await _messageService.fetchMessagesByChat(chatId);
+      final user = await LocalCacheService.getUserInfo();
+      final userId = user?['user_id'];
+      final fetched =
+          userId != null
+              ? await _messageService.fetchMessagesByChat(chatId, userId)
+              : await _messageService.fetchMessagesByChat(chatId, '');
       // 通信成功時はキャッシュ保存
       await LocalCacheService.cacheMessages(chatId, fetched);
       final mapped =
           fetched.map((m) {
             final isUser = m.sender == 'user';
+            // ignore: unnecessary_this
             return types.TextMessage(
-              author: isUser ? user : bot,
+              author: isUser ? this.user : this.bot,
               id: m.id,
               text: m.content,
               createdAt: m.createdAt.millisecondsSinceEpoch,
@@ -103,9 +113,45 @@ class ChatDetailController extends ChangeNotifier {
     isSending = true;
     notifyListeners();
     try {
-      await _saveUserMessage(message);
-      final aiReply = await _fetchAIResponse(message);
-      await _saveAIMessage(aiReply);
+      final userInfo = await LocalCacheService.getUserInfo();
+      final currentUserId = userInfo?['user_id'];
+      if (currentUserId == null) {
+        // 未ログイン時はローカルキャッシュのみ保存
+        final localMsg = app_models.Message(
+          id: const Uuid().v4(),
+          chatId: chatId,
+          sender: 'user',
+          content: message,
+          createdAt: DateTime.now(),
+          userId: null,
+        );
+        await LocalCacheService.cacheMessages(chatId, [localMsg]);
+        // AI返信もローカル保存
+        final aiReply = await _fetchAIResponse(message, '');
+        final aiMsg = app_models.Message(
+          id: const Uuid().v4(),
+          chatId: chatId,
+          sender: 'ai',
+          content: aiReply,
+          createdAt: DateTime.now(),
+          userId: null,
+        );
+        await LocalCacheService.cacheMessages(chatId, [localMsg, aiMsg]);
+        final aiMessage = types.TextMessage(
+          author: bot,
+          createdAt: DateTime.now().millisecondsSinceEpoch,
+          id: const Uuid().v4(),
+          text: aiReply,
+        );
+        messages.insert(0, aiMessage);
+        isSending = false;
+        notifyListeners();
+        return;
+      }
+      // ログイン時はサーバーにメッセージを保存
+      await _saveUserMessage(message, currentUserId);
+      final aiReply = await _fetchAIResponse(message, currentUserId);
+      await _saveAIMessage(aiReply, currentUserId);
       final aiMessage = types.TextMessage(
         author: bot,
         createdAt: DateTime.now().millisecondsSinceEpoch,
@@ -122,36 +168,35 @@ class ChatDetailController extends ChangeNotifier {
     }
   }
 
-  Future<void> _saveUserMessage(String content) async {
-    final currentUserId = Supabase.instance.client.auth.currentUser?.id;
+  Future<void> _saveUserMessage(String content, String userId) async {
     final message = app_models.Message(
       id: const Uuid().v4(),
       chatId: chatId,
       sender: 'user',
       content: content,
       createdAt: DateTime.now(),
-      userId: currentUserId,
+      userId: userId,
     );
-    await _messageService.createMessage(message);
+    await _messageService.createMessage(message, userId);
     await _chatService.incrementMessageCount(chatId);
   }
 
-  Future<void> _saveAIMessage(String content) async {
+  Future<void> _saveAIMessage(String content, String userId) async {
     final message = app_models.Message(
       id: const Uuid().v4(),
       chatId: chatId,
       sender: 'ai',
       content: content,
       createdAt: DateTime.now(),
-      userId: null,
+      userId: userId,
     );
-    await _messageService.createMessage(message);
+    await _messageService.createMessage(message, userId);
     await _chatService.updateLastMessage(chatId, content);
     await _chatService.incrementMessageCount(chatId);
   }
 
-  Future<String> _fetchAIResponse(String userInput) async {
-    final history = await _messageService.fetchMessagesByChat(chatId);
+  Future<String> _fetchAIResponse(String userInput, String userId) async {
+    final history = await _messageService.fetchMessagesByChat(chatId, userId);
     final messagesForAI =
         history
             .map(

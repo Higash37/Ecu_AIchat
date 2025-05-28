@@ -6,11 +6,15 @@ import '../models/message.dart';
 class MessageService {
   final supabase = Supabase.instance.client;
 
-  Future<List<Message>> fetchMessagesByChat(String chatId) async {
+  Future<List<Message>> fetchMessagesByChat(
+    String chatId,
+    String userId,
+  ) async {
     final response = await supabase
         .from('messages')
         .select()
         .eq('chat_id', chatId)
+        .eq('user_id', userId)
         .order('created_at');
 
     return (response as List).map((e) => Message.fromMap(e)).toList();
@@ -29,24 +33,26 @@ class MessageService {
     return (response as List).map((e) => Message.fromMap(e)).toList();
   }
 
-  Future<void> createMessage(Message message) async {
-    await supabase.from('messages').insert(message.toMap());
+  Future<void> createMessage(Message message, String userId) async {
+    final msgMap = message.toMap();
+    msgMap['user_id'] = userId;
+    await supabase.from('messages').insert(msgMap);
   }
 
   Future<void> createMessageForNewChat(
     String chatId,
     String sender,
     String content,
+    String userId,
   ) async {
-    final currentUserId = Supabase.instance.client.auth.currentUser?.id;
     final message = Message(
       id: Uuid().v4(),
       chatId: chatId,
       sender: sender,
       content: content,
       createdAt: DateTime.now(),
-      userId: currentUserId, // ログインユーザーIDをセット
+      userId: userId,
     );
-    await createMessage(message);
+    await createMessage(message, userId);
   }
 }

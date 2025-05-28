@@ -6,6 +6,7 @@ import '../../../models/project.dart';
 import '../../../models/chat.dart';
 import '../../../services/chat_service.dart';
 import '../../../services/project_service.dart';
+import '../../../services/local_cache_service.dart';
 import '../../../theme/app_theme.dart';
 import '../../../widgets/sides/drawer/app_scaffold.dart';
 import '../../tag_screens/tag_list_screen/tag_list_screen.dart';
@@ -47,8 +48,11 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
       if (widget.project.id == null) {
         throw Exception('プロジェクトIDが未設定です');
       }
+      final user = await LocalCacheService.getUserInfo();
+      final userId = user?['user_id'] ?? '';
       final chats = await _chatService.fetchChatsByProjectId(
         widget.project.id!,
+        userId,
       );
       setState(() {
         _chats = chats;

@@ -12,6 +12,7 @@ import 'drawer_menu_item.dart';
 import 'drawer_search_bar.dart';
 import 'drawer_view_all_chats.dart';
 import 'drawer_toast.dart';
+import '../../auth/login_dialog.dart';
 
 class AppDrawerNew extends StatefulWidget {
   const AppDrawerNew({super.key});
@@ -24,17 +25,22 @@ class _AppDrawerNewState extends State<AppDrawerNew> {
   final ChatService _chatService = ChatService();
   List<Chat> _recentChats = [];
   bool _isLoading = true;
+  bool _isLoggedIn = false;
+  String? _nickname;
 
   @override
   void initState() {
     super.initState();
     _loadRecentChats();
+    _restoreLoginState();
   }
 
   Future<void> _loadRecentChats() async {
     try {
       // 直近のチャット履歴を取得（最大10件）
-      final allChats = await _chatService.fetchAllChats();
+      final user = await LocalCacheService.getUserInfo();
+      final userId = user?['user_id'] ?? '';
+      final allChats = await _chatService.fetchAllChats(userId);
       // 通信成功時はキャッシュ保存
       await LocalCacheService.cacheChats(allChats);
       setState(() {
@@ -50,6 +56,38 @@ class _AppDrawerNewState extends State<AppDrawerNew> {
       });
       // オフライン表示通知（任意）
       // ScaffoldMessenger.of(context).showSnackBar(...)
+    }
+  }
+
+  Future<void> _restoreLoginState() async {
+    final user = await LocalCacheService.getUserInfo();
+    if (user != null) {
+      setState(() {
+        _isLoggedIn = true;
+        _nickname = user['nickname'];
+      });
+    }
+  }
+
+  void _showLoginDialog() async {
+    final result = await showDialog(
+      context: context,
+      builder:
+          (context) => LoginDialog(
+            onSubmit: (nickname, password, isLogin) {}, // ダミー
+          ),
+    );
+    if (result is Map &&
+        result['user_id'] != null &&
+        result['nickname'] != null) {
+      await LocalCacheService.saveUserInfo(
+        result['user_id'],
+        result['nickname'],
+      );
+      setState(() {
+        _isLoggedIn = true;
+        _nickname = result['nickname'];
+      });
     }
   }
 
@@ -218,6 +256,53 @@ class _AppDrawerNewState extends State<AppDrawerNew> {
                 ],
               ),
             ),
+            // ログイン/ユーザー表示導線
+            if (!_isLoggedIn)
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
+                child: ElevatedButton.icon(
+                  icon: const Icon(Icons.login),
+                  label: const Text('ログイン / 新規登録'),
+                  onPressed: _showLoginDialog,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF6C63FF),
+                    foregroundColor: Colors.white,
+                  ),
+                ),
+              )
+            else
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.account_circle, color: Color(0xFF6C63FF)),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        _nickname ?? '',
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: () async {
+                        // ログアウト処理
+                        await LocalCacheService.clearUserInfo();
+                        setState(() {
+                          _isLoggedIn = false;
+                          _nickname = null;
+                        });
+                      },
+                      child: const Text('ログアウト'),
+                    ),
+                  ],
+                ),
+              ),
           ],
         ),
       ),

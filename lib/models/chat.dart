@@ -18,6 +18,8 @@ class Chat {
   final String? lastMessage;
   @HiveField(6)
   final int? messageCount;
+  @HiveField(7)
+  final String? userId;
 
   Chat({
     required this.id,
@@ -27,6 +29,7 @@ class Chat {
     this.updatedAt,
     this.lastMessage,
     this.messageCount,
+    this.userId,
   });
 
   factory Chat.fromMap(Map<String, dynamic> map) {
@@ -42,6 +45,7 @@ class Chat {
           map['message_count'] != null
               ? (map['message_count'] as num).toInt()
               : null,
+      userId: map['user_id'],
     );
   }
 
@@ -62,6 +66,9 @@ class Chat {
     }
     if (messageCount != null) {
       result['message_count'] = messageCount;
+    }
+    if (userId != null) {
+      result['user_id'] = userId;
     }
     return result;
   }

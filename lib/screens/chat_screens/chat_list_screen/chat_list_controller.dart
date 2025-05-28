@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:uuid/uuid.dart';
 import '../../../models/chat.dart';
 import '../../../services/chat_service.dart';
 import '../../../services/local_cache_service.dart';
@@ -18,15 +19,27 @@ class ChatListController extends ChangeNotifier {
     notifyListeners();
     try {
       List<Chat> loadedChats;
-      if (projectId != null) {
-        loadedChats = await _chatService.fetchChatsByProject(projectId!);
-        projectTitle = 'プロジェクト内チャット';
+      // ログインユーザーID取得
+      final user = await LocalCacheService.getUserInfo();
+      final userId = user?['user_id'];
+      if (userId == null) {
+        // 未ログイン時はローカルキャッシュのみ
+        loadedChats = LocalCacheService.getCachedChats();
+        projectTitle = projectId != null ? 'プロジェクト内チャット' : 'すべてのチャット';
       } else {
-        loadedChats = await _chatService.fetchAllChats();
-        projectTitle = 'すべてのチャット';
+        if (projectId != null) {
+          loadedChats = await _chatService.fetchChatsByProject(
+            projectId!,
+            userId,
+          );
+          projectTitle = 'プロジェクト内チャット';
+        } else {
+          loadedChats = await _chatService.fetchAllChats(userId);
+          projectTitle = 'すべてのチャット';
+        }
+        // 通信成功時はキャッシュ保存
+        await LocalCacheService.cacheChats(loadedChats);
       }
-      // 通信成功時はキャッシュ保存
-      await LocalCacheService.cacheChats(loadedChats);
       loadedChats.sort((a, b) {
         final DateTime dateA = a.updatedAt ?? a.createdAt;
         final DateTime dateB = b.updatedAt ?? b.createdAt;
@@ -60,13 +73,23 @@ class ChatListController extends ChangeNotifier {
   }
 
   Future<Chat?> createChat(BuildContext context, String title) async {
-    if (projectId == null) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('プロジェクトを選択してください')));
-      }
-      return null;
+    final user = await LocalCacheService.getUserInfo();
+    final userId = user?['user_id'];
+    if (userId == null) {
+      // 未ログイン時はローカルキャッシュのみ保存
+      final newChat = Chat(
+        id: const Uuid().v4(),
+        projectId: projectId!,
+        title: title,
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+        lastMessage: '',
+        messageCount: 0,
+        userId: null,
+      );
+      await LocalCacheService.cacheChats([newChat]);
+      await loadChats(context);
+      return newChat;
     }
     try {
       final newChat = Chat(
@@ -77,8 +100,9 @@ class ChatListController extends ChangeNotifier {
         updatedAt: DateTime.now(),
         lastMessage: '',
         messageCount: 0,
+        userId: userId,
       );
-      final createdChat = await _chatService.createChat(newChat);
+      final createdChat = await _chatService.createChat(newChat, userId);
       await loadChats(context);
       return createdChat;
     } catch (e) {
