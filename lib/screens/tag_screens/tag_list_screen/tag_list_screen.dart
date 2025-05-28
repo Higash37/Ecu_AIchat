@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
 import '../../../models/tag.dart';
 import '../../../services/tag_service.dart';
-import '../../../widgets/common/drawer/app_scaffold.dart';
+import '../../../widgets/sides/drawer/app_scaffold.dart';
 import '../../../types/tag_types.dart';
 import 'tag_list_empty.dart';
 import 'tag_list_grouped.dart';

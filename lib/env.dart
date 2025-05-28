@@ -2,7 +2,7 @@
 
 class AppConfig {
   // 開発中はtrueに設定し、公開時にはfalseに変更
-  static const bool isLocal = true;
+  static const bool isLocal = false;
 
   // APIのベースURL：ローカル開発時とRenderデプロイ時で切り替え
   static String get apiBaseUrl =>
