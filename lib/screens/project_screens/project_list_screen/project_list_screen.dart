@@ -28,6 +28,7 @@ class _ProjectListScreenState extends State<ProjectListScreen> {
   final _projectService = ProjectService();
   List<Project> _projects = [];
   bool _isLoading = true;
+  String? _errorMessage; // エラー状態追加
 
   @override
   void initState() {
@@ -38,6 +39,7 @@ class _ProjectListScreenState extends State<ProjectListScreen> {
   Future<void> _loadProjects() async {
     setState(() {
       _isLoading = true;
+      _errorMessage = null;
     });
 
     try {
@@ -49,12 +51,8 @@ class _ProjectListScreenState extends State<ProjectListScreen> {
     } catch (e) {
       setState(() {
         _isLoading = false;
+        _errorMessage = 'プロジェクトの読み込みに失敗しました。再試行してください。';
       });
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('プロジェクトの読み込みに失敗しました: $e')));
-      }
     }
   }
 
@@ -74,6 +72,8 @@ class _ProjectListScreenState extends State<ProjectListScreen> {
       body:
           _isLoading
               ? const Center(child: CircularProgressIndicator())
+              : _errorMessage != null
+              ? _buildErrorState()
               : _projects.isEmpty
               ? ProjectListEmpty(
                 forSelection: widget.forSelection,
@@ -98,7 +98,7 @@ class _ProjectListScreenState extends State<ProjectListScreen> {
                                 (context) =>
                                     ProjectDetailScreen(project: project),
                           ),
-                        );
+                        ).then((_) => _loadProjects());
                       }
                     },
                   );
@@ -112,6 +112,24 @@ class _ProjectListScreenState extends State<ProjectListScreen> {
                 onPressed: () => _showCreateProjectDialog(context),
                 child: const Icon(Icons.add),
               ),
+    );
+  }
+
+  Widget _buildErrorState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.error_outline, size: 64, color: Colors.redAccent),
+          const SizedBox(height: 16),
+          Text(
+            _errorMessage ?? 'エラーが発生しました',
+            style: const TextStyle(fontSize: 16, color: Colors.redAccent),
+          ),
+          const SizedBox(height: 16),
+          ElevatedButton(onPressed: _loadProjects, child: const Text('再試行')),
+        ],
+      ),
     );
   }
 

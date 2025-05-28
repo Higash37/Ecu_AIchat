@@ -8,13 +8,13 @@ import '../../../services/chat_service.dart';
 import '../../../services/project_service.dart';
 import '../../../theme/app_theme.dart';
 import '../../../widgets/sides/drawer/app_scaffold.dart';
-import '../../chat_screens/chat_detail_screen/chat_detail_screen.dart';
 import '../../tag_screens/tag_list_screen/tag_list_screen.dart';
-import 'project_detail_create_chat_dialog.dart';
-import 'project_detail_edit_project_dialog.dart';
-import 'project_detail_delete_dialog.dart';
+import 'project_detail_dialogs.dart';
 import 'project_detail_pdf_sheet.dart';
 import 'project_detail_toast.dart';
+import '../../../widgets/common/error_state_widget.dart';
+import '../../chat_screens/chat_screen/chat_screen.dart';
+import 'package:uuid/uuid.dart';
 
 class ProjectDetailScreen extends StatefulWidget {
   final Project project;
@@ -27,9 +27,10 @@ class ProjectDetailScreen extends StatefulWidget {
 
 class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
   final _chatService = ChatService();
-  final _projectService = ProjectService(); // ProjectServiceを追加
+  final _projectService = ProjectService();
   List<Chat> _chats = [];
   bool _isLoading = true;
+  String? _errorMessage;
 
   @override
   void initState() {
@@ -40,10 +41,9 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
   Future<void> _loadChats() async {
     setState(() {
       _isLoading = true;
+      _errorMessage = null;
     });
-
     try {
-      // プロジェクトIDがnullの場合のエラー処理
       if (widget.project.id == null) {
         throw Exception('プロジェクトIDが未設定です');
       }
@@ -57,12 +57,8 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
     } catch (e) {
       setState(() {
         _isLoading = false;
+        _errorMessage = 'チャットの読み込みに失敗しました。再試行してください。';
       });
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('チャットの読み込みに失敗しました: $e')));
-      }
     }
   }
 
@@ -74,15 +70,61 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
       actions: [
         IconButton(
           icon: const Icon(Icons.edit),
-          onPressed: () => _showEditProjectDialog(context),
+          onPressed:
+              () => showEditProjectDialog(
+                context: context,
+                project: widget.project,
+                projectService: _projectService,
+                onUpdated: () => setState(() {}),
+              ),
         ),
         IconButton(
           icon: const Icon(Icons.more_vert),
-          onPressed: () => _showMoreOptions(context),
+          onPressed:
+              () => showMoreOptions(
+                context: context,
+                onDelete:
+                    () => showDeleteConfirmation(
+                      context: context,
+                      onDelete: () async {
+                        try {
+                          if (widget.project.id == null) {
+                            throw Exception('プロジェクトIDが未設定です');
+                          }
+                          await _projectService.deleteProject(
+                            widget.project.id!,
+                          );
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('プロジェクトを削除しました')),
+                            );
+                            Navigator.of(context).pop();
+                          }
+                        } catch (e) {
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('プロジェクト削除に失敗しました: $e')),
+                            );
+                          }
+                        }
+                      },
+                    ),
+              ),
         ),
       ],
       floatingActionButton: FloatingActionButton(
-        onPressed: () => _showCreateChatDialog(context),
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder:
+                  (_) => ChatScreen(
+                    chatId: const Uuid().v4(),
+                    projectId: widget.project.id ?? '',
+                  ),
+            ),
+          );
+        },
         backgroundColor: AppTheme.primaryColor,
         child: const Icon(Icons.add),
       ),
@@ -92,7 +134,18 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
           ProjectDetailHeader(
             project: widget.project,
             chatCount: _chats.length,
-            onCreateChat: () => _showCreateChatDialog(context),
+            onCreateChat: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder:
+                      (_) => ChatScreen(
+                        chatId: const Uuid().v4(),
+                        projectId: widget.project.id ?? '',
+                      ),
+                ),
+              );
+            },
             onTagManage: () {
               if (widget.project.id != null) {
                 Navigator.push(
@@ -136,13 +189,34 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
             child:
                 _isLoading
                     ? const Center(child: CircularProgressIndicator())
+                    : _errorMessage != null
+                    ? ErrorStateWidget(
+                      message: _errorMessage ?? 'エラーが発生しました',
+                      onRetry: _loadChats,
+                    )
                     : _chats.isEmpty
                     ? ProjectDetailEmpty(
-                      onCreateChat: () => _showCreateChatDialog(context),
+                      onCreateChat: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder:
+                                (_) => ChatScreen(
+                                  chatId: const Uuid().v4(),
+                                  projectId: widget.project.id ?? '',
+                                ),
+                          ),
+                        );
+                      },
                     )
                     : ProjectDetailChatList(
                       chats: _chats,
-                      onDeleteChat: (chat) => _confirmDeleteChat(chat),
+                      onDeleteChat:
+                          (chat) => showConfirmDeleteChat(
+                            context: context,
+                            chat: chat,
+                            onDelete: () => _deleteChat(chat.id),
+                          ),
                     ),
           ),
         ],
@@ -150,174 +224,14 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
     );
   }
 
-  void _showCreateChatDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder:
-          (context) => ProjectDetailCreateChatDialog(
-            projectId: widget.project.id!,
-            onCreate: (chat) async {
-              try {
-                final createdChat = await _chatService.createChat(chat);
-                _loadChats();
-                if (createdChat.id.isNotEmpty && mounted) {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder:
-                          (context) => ChatDetailScreen(
-                            chatId: createdChat.id,
-                            chat: createdChat,
-                          ),
-                    ),
-                  );
-                }
-              } catch (e) {
-                if (mounted) {
-                  ScaffoldMessenger.of(
-                    context,
-                  ).showSnackBar(SnackBar(content: Text('チャットの作成に失敗しました: $e')));
-                }
-              }
-              return null;
-            },
-          ),
-    );
-  }
-
-  void _showEditProjectDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder:
-          (context) => ProjectDetailEditProjectDialog(
-            project: widget.project,
-            onUpdate: (updatedProject) async {
-              try {
-                await _projectService.updateProject(updatedProject);
-                if (mounted) {
-                  setState(() {});
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('プロジェクトを更新しました')),
-                  );
-                }
-              } catch (e) {
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('プロジェクト更新に失敗しました: $e')),
-                  );
-                }
-              }
-            },
-          ),
-    );
-  }
-
-  void _showMoreOptions(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) {
-        return Padding(
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ListTile(
-                leading: const Icon(Icons.content_copy),
-                title: const Text('プロジェクトIDをコピー'),
-                onTap: () {
-                  Navigator.pop(context);
-                  // TODO: クリップボードにコピー
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('プロジェクトIDをコピーしました')),
-                  );
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.delete_outline),
-                title: const Text('プロジェクトを削除'),
-                textColor: Colors.red,
-                iconColor: Colors.red,
-                onTap: () {
-                  Navigator.pop(context);
-                  _showDeleteConfirmation(context);
-                },
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  void _showDeleteConfirmation(BuildContext context) {
-    showDialog(
-      context: context,
-      builder:
-          (context) => ProjectDetailDeleteDialog(
-            onDelete: () async {
-              try {
-                if (widget.project.id == null) {
-                  throw Exception('プロジェクトIDが未設定です');
-                }
-                await _projectService.deleteProject(widget.project.id!);
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('プロジェクトを削除しました')),
-                  );
-                  Navigator.of(context).pop();
-                }
-              } catch (e) {
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('プロジェクト削除に失敗しました: $e')),
-                  );
-                }
-              }
-            },
-          ),
-    );
-  }
-
-  // チャット削除の確認ダイアログを表示
-  void _confirmDeleteChat(Chat chat) {
-    showDialog(
-      context: context,
-      builder:
-          (context) => AlertDialog(
-            title: const Text('チャットを削除'),
-            content: Text('「${chat.title}」を削除しますか？この操作は元に戻せません。'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('キャンセル'),
-              ),
-              ElevatedButton(
-                onPressed: () async {
-                  Navigator.pop(context);
-                  await _deleteChat(chat.id);
-                },
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-                child: const Text('削除'),
-              ),
-            ],
-          ),
-    );
-  }
-
-  // チャットを削除する
   Future<void> _deleteChat(String chatId) async {
     try {
       final chatService = ChatService();
       await chatService.deleteChat(chatId);
-
       if (mounted) {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(const SnackBar(content: Text('チャットを削除しました')));
-        // チャット一覧を再読み込み
         _loadChats();
       }
     } catch (e) {

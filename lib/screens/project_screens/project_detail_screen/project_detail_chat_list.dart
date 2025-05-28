@@ -4,7 +4,7 @@
 import 'package:flutter/material.dart';
 import '../../../models/chat.dart';
 import '../../../theme/app_theme.dart';
-import '../../chat_screens/chat_detail_screen/chat_detail_screen.dart';
+import '../../chat_screens/chat_screen/chat_screen.dart';
 
 class ProjectDetailChatList extends StatelessWidget {
   final List<Chat> chats;
@@ -115,8 +115,10 @@ class ProjectDetailChatList extends StatelessWidget {
                   context,
                   MaterialPageRoute(
                     builder:
-                        (context) =>
-                            ChatDetailScreen(chatId: chat.id, chat: chat),
+                        (context) => ChatScreen(
+                          chatId: chat.id,
+                          projectId: chat.projectId ?? '',
+                        ),
                   ),
                 );
               },

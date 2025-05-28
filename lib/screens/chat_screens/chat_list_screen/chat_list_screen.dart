@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:uuid/uuid.dart';
 import '../../../models/chat.dart';
 import '../../../theme/app_theme.dart';
 import '../../../widgets/sides/drawer/app_scaffold.dart';
-import '../chat_detail_screen/chat_detail_screen.dart';
+import '../chat_screen/chat_screen.dart'; // ChatScreenをimport
 import 'chat_list_controller.dart';
 import 'chat_list_item.dart';
 import 'chat_list_empty_state.dart';
-import 'new_chat_dialog.dart';
 import 'delete_chat_dialog.dart';
 
 class ChatListScreen extends StatefulWidget {
@@ -19,13 +19,27 @@ class ChatListScreen extends StatefulWidget {
 
 class _ChatListScreenState extends State<ChatListScreen> {
   late ChatListController _controller;
+  String? _errorMessage;
 
   @override
   void initState() {
     super.initState();
     _controller = ChatListController(projectId: widget.projectId);
     _controller.addListener(_onControllerChanged);
-    _controller.loadChats(context);
+    _loadChats();
+  }
+
+  void _loadChats() async {
+    setState(() {
+      _errorMessage = null;
+    });
+    try {
+      await _controller.loadChats(context);
+    } catch (e) {
+      setState(() {
+        _errorMessage = 'チャットの読み込みに失敗しました。再試行してください。';
+      });
+    }
   }
 
   @override
@@ -38,31 +52,17 @@ class _ChatListScreenState extends State<ChatListScreen> {
     if (mounted) setState(() {});
   }
 
-  Future<void> _createChat() async {
-    if (widget.projectId == null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('プロジェクトを選択してください')));
-      return;
-    }
-    final titleController = TextEditingController();
-    final title = await showDialog<String>(
-      context: context,
-      builder: (context) => NewChatDialog(controller: titleController),
+  void _createChat() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder:
+            (_) => ChatScreen(
+              chatId: const Uuid().v4(),
+              projectId: widget.projectId ?? '',
+            ),
+      ),
     );
-    if (title != null && title.isNotEmpty) {
-      final createdChat = await _controller.createChat(context, title);
-      if (createdChat != null && createdChat.id.isNotEmpty && mounted) {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder:
-                (_) =>
-                    ChatDetailScreen(chatId: createdChat.id, chat: createdChat),
-          ),
-        ).then((_) => _controller.loadChats(context));
-      }
-    }
   }
 
   void _confirmDeleteChat(Chat chat) {
@@ -85,14 +85,13 @@ class _ChatListScreenState extends State<ChatListScreen> {
       currentNavIndex: 1,
       showBottomNav: false,
       actions: [
-        IconButton(
-          icon: const Icon(Icons.refresh),
-          onPressed: () => _controller.loadChats(context),
-        ),
+        IconButton(icon: const Icon(Icons.refresh), onPressed: _loadChats),
       ],
       body:
           _controller.isLoading
               ? const Center(child: CircularProgressIndicator())
+              : _errorMessage != null
+              ? _buildErrorState()
               : _controller.chats.isEmpty
               ? _buildEmptyState()
               : _buildChatList(),
@@ -100,6 +99,24 @@ class _ChatListScreenState extends State<ChatListScreen> {
         backgroundColor: AppTheme.primaryColor,
         onPressed: _createChat,
         child: const Icon(Icons.add),
+      ),
+    );
+  }
+
+  Widget _buildErrorState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.error_outline, size: 64, color: Colors.redAccent),
+          const SizedBox(height: 16),
+          Text(
+            _errorMessage ?? 'エラーが発生しました',
+            style: const TextStyle(fontSize: 16, color: Colors.redAccent),
+          ),
+          const SizedBox(height: 16),
+          ElevatedButton(onPressed: _loadChats, child: const Text('再試行')),
+        ],
       ),
     );
   }
@@ -121,7 +138,11 @@ class _ChatListScreenState extends State<ChatListScreen> {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (_) => ChatDetailScreen(chatId: chat.id, chat: chat),
+                builder:
+                    (_) => ChatScreen(
+                      chatId: chat.id,
+                      projectId: chat.projectId ?? '',
+                    ),
               ),
             ).then((_) => _controller.loadChats(context));
           },

@@ -24,11 +24,10 @@ class ChatScreenController extends ChangeNotifier {
   final ChatService _chatService = ChatService();
   bool chatCreated = false;
 
-  ChatScreenController({required this.chatId, required this.projectId}) {
-    _addWelcomeMessage();
-  }
+  ChatScreenController({required this.chatId, required this.projectId});
 
   void _addWelcomeMessage() {
+    if (messages.isNotEmpty) return; // 既にメッセージがあれば追加しない
     final welcomeMessage = types.TextMessage(
       author: _bot,
       createdAt: DateTime.now().millisecondsSinceEpoch,
@@ -64,7 +63,7 @@ class ChatScreenController extends ChangeNotifier {
         final chat = Chat(
           id: chatId,
           projectId: projectId,
-          title: '新規チャット',
+          title: '', // タイトルは後で自動生成
           createdAt: DateTime.now(),
           updatedAt: DateTime.now(),
           lastMessage: '',
@@ -131,8 +130,25 @@ class ChatScreenController extends ChangeNotifier {
     );
     messages.insert(0, aiMessage);
     messages.insert(0, textMessage);
+    // --- タイトル自動生成 ---
+    if (messages.length <= 4) {
+      // 最初の2往復でタイトル自動生成
+      final autoTitle = await _generateChatTitle(message, aiReply);
+      if (autoTitle.isNotEmpty) {
+        await _chatService.updateChatTitle(chatId, autoTitle);
+      }
+    }
     isLoading = false;
     notifyListeners();
+  }
+
+  Future<String> _generateChatTitle(String userMsg, String aiMsg) async {
+    // ChatGPT APIやローカルで要約生成（ここでは簡易実装）
+    // 本番はAPIでタイトル生成推奨
+    final prompt = '「$userMsg」$aiMsg';
+    // 30文字以内で要約
+    if (prompt.length <= 30) return prompt;
+    return prompt.substring(0, 30) + '...';
   }
 
   Future<String> _fetchAIResponse(String text) async {

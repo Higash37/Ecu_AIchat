@@ -4,6 +4,7 @@ import 'package:uuid/uuid.dart';
 import 'screens/chat_screens/chat_screen/chat_screen.dart';
 import 'theme/app_theme.dart';
 import 'env.dart'; // 環境設定クラスをインポート
+import 'services/local_cache_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -13,6 +14,9 @@ Future<void> main() async {
     url: AppConfig.supabaseUrl,
     anonKey: AppConfig.supabaseAnonKey,
   );
+
+  // Hiveローカルキャッシュ初期化
+  await LocalCacheService.init();
 
   runApp(const MyApp());
 }

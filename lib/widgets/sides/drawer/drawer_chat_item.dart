@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../models/chat.dart';
-import '../../../screens/chat_screens/chat_detail_screen/chat_detail_screen.dart';
+import '../../../screens/chat_screens/chat_screen/chat_screen.dart';
 import 'package:intl/intl.dart';
 
 /// Drawer内のチャット履歴アイテム用Widget
@@ -34,7 +34,11 @@ class DrawerChatItem extends StatelessWidget {
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(
-              builder: (context) => ChatDetailScreen(chatId: chat.id),
+              builder:
+                  (context) => ChatScreen(
+                    chatId: chat.id,
+                    projectId: chat.projectId ?? '',
+                  ),
             ),
           );
         },

@@ -1,10 +1,20 @@
-// models/message.dart
+import 'package:hive/hive.dart';
+
+part 'message.g.dart';
+
+@HiveType(typeId: 1)
 class Message {
+  @HiveField(0)
   final String id;
+  @HiveField(1)
   final String chatId;
+  @HiveField(2)
   final String sender; // 'user' or 'ai'
+  @HiveField(3)
   final String content;
+  @HiveField(4)
   final DateTime createdAt;
+  @HiveField(5)
   final String? userId; // 追加: ユーザー識別子
 
   Message({

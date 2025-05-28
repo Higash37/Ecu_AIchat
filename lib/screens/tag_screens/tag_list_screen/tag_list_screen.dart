@@ -20,6 +20,7 @@ class _TagListScreenState extends State<TagListScreen> {
   final TagService _tagService = TagService();
   List<Tag> _tags = [];
   bool _isLoading = true;
+  String? _errorMessage; // エラー状態追加
 
   final TextEditingController _labelController = TextEditingController();
   TagType _selectedType = TagType.keyword;
@@ -31,7 +32,10 @@ class _TagListScreenState extends State<TagListScreen> {
   }
 
   Future<void> _loadTags() async {
-    setState(() => _isLoading = true);
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
 
     try {
       final tags = await _tagService.fetchTagsByProject(widget.projectId);
@@ -51,10 +55,10 @@ class _TagListScreenState extends State<TagListScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('タグの読み込みに失敗しました: $e')));
-        setState(() => _isLoading = false);
+        setState(() {
+          _isLoading = false;
+          _errorMessage = 'タグの読み込みに失敗しました。再試行してください。';
+        });
       }
     }
   }
@@ -165,6 +169,8 @@ class _TagListScreenState extends State<TagListScreen> {
       body:
           _isLoading
               ? const Center(child: CircularProgressIndicator())
+              : _errorMessage != null
+              ? _buildErrorState()
               : Column(
                 children: [
                   TagListInput(
@@ -186,6 +192,24 @@ class _TagListScreenState extends State<TagListScreen> {
                   ),
                 ],
               ),
+    );
+  }
+
+  Widget _buildErrorState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.error_outline, size: 64, color: Colors.redAccent),
+          const SizedBox(height: 16),
+          Text(
+            _errorMessage ?? 'エラーが発生しました',
+            style: const TextStyle(fontSize: 16, color: Colors.redAccent),
+          ),
+          const SizedBox(height: 16),
+          ElevatedButton(onPressed: _loadTags, child: const Text('再試行')),
+        ],
+      ),
     );
   }
 }

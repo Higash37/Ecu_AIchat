@@ -7,6 +7,7 @@ import '../../../models/chat.dart';
 import '../../../models/message.dart' as app_models;
 import '../../../services/chat_service.dart';
 import '../../../services/message_service.dart';
+import '../../../services/local_cache_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../env.dart';
 
@@ -48,6 +49,8 @@ class ChatDetailController extends ChangeNotifier {
   Future<void> _loadMessages() async {
     try {
       final fetched = await _messageService.fetchMessagesByChat(chatId);
+      // 通信成功時はキャッシュ保存
+      await LocalCacheService.cacheMessages(chatId, fetched);
       final mapped =
           fetched.map((m) {
             final isUser = m.sender == 'user';
@@ -63,9 +66,28 @@ class ChatDetailController extends ChangeNotifier {
       isLoading = false;
       notifyListeners();
     } catch (e) {
-      isLoading = false;
-      notifyListeners();
-      rethrow;
+      // 通信失敗時はキャッシュから取得
+      final cached = await LocalCacheService.getCachedMessages(chatId);
+      if (cached.isNotEmpty) {
+        final mapped =
+            cached.map((m) {
+              final isUser = m.sender == 'user';
+              return types.TextMessage(
+                author: isUser ? user : bot,
+                id: m.id,
+                text: m.content,
+                createdAt: m.createdAt.millisecondsSinceEpoch,
+              );
+            }).toList();
+        messages.clear();
+        messages.addAll(mapped);
+        isLoading = false;
+        notifyListeners();
+      } else {
+        isLoading = false;
+        notifyListeners();
+        rethrow;
+      }
     }
   }
 

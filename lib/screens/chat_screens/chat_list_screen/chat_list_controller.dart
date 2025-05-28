@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../models/chat.dart';
 import '../../../services/chat_service.dart';
+import '../../../services/local_cache_service.dart';
 
 /// ChatListScreenのロジック・状態管理用コントローラー
 class ChatListController extends ChangeNotifier {
@@ -19,12 +20,13 @@ class ChatListController extends ChangeNotifier {
       List<Chat> loadedChats;
       if (projectId != null) {
         loadedChats = await _chatService.fetchChatsByProject(projectId!);
-        // TODO: プロジェクトタイトルも取得
         projectTitle = 'プロジェクト内チャット';
       } else {
         loadedChats = await _chatService.fetchAllChats();
         projectTitle = 'すべてのチャット';
       }
+      // 通信成功時はキャッシュ保存
+      await LocalCacheService.cacheChats(loadedChats);
       loadedChats.sort((a, b) {
         final DateTime dateA = a.updatedAt ?? a.createdAt;
         final DateTime dateB = b.updatedAt ?? b.createdAt;
@@ -34,12 +36,25 @@ class ChatListController extends ChangeNotifier {
       isLoading = false;
       notifyListeners();
     } catch (e) {
-      isLoading = false;
-      notifyListeners();
-      if (context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('チャットの読み込みに失敗しました: $e')));
+      // 通信失敗時はキャッシュから取得
+      final cached = LocalCacheService.getCachedChats();
+      if (cached.isNotEmpty) {
+        chats = cached;
+        isLoading = false;
+        notifyListeners();
+        if (context.mounted) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('オフラインキャッシュから表示しています')));
+        }
+      } else {
+        isLoading = false;
+        notifyListeners();
+        if (context.mounted) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('チャットの読み込みに失敗しました: $e')));
+        }
       }
     }
   }

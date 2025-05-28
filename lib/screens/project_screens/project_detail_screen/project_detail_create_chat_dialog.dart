@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../../../models/chat.dart';
 import 'package:uuid/uuid.dart';
 
+// このファイル（project_detail_create_chat_dialog.dart）は不要になったため削除推奨
+
 class ProjectDetailCreateChatDialog extends StatelessWidget {
   final String projectId;
   final Future<Chat?> Function(Chat chat) onCreate;

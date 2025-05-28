@@ -5,6 +5,7 @@ import '../../../screens/project_screens/project_list_screen/project_list_screen
 import '../../../screens/chat_screens/chat_screen/chat_screen.dart';
 import '../../../screens/tag_screens/tag_list_screen/tag_list_screen.dart';
 import '../../../services/chat_service.dart';
+import '../../../services/local_cache_service.dart';
 import 'drawer_section_header.dart';
 import 'drawer_chat_item.dart';
 import 'drawer_menu_item.dart';
@@ -34,15 +35,21 @@ class _AppDrawerNewState extends State<AppDrawerNew> {
     try {
       // 直近のチャット履歴を取得（最大10件）
       final allChats = await _chatService.fetchAllChats();
-
+      // 通信成功時はキャッシュ保存
+      await LocalCacheService.cacheChats(allChats);
       setState(() {
         _recentChats = allChats.take(10).toList();
         _isLoading = false;
       });
     } catch (e) {
+      // 通信失敗時はキャッシュから取得
+      final cached = LocalCacheService.getCachedChats();
       setState(() {
+        _recentChats = cached.take(10).toList();
         _isLoading = false;
       });
+      // オフライン表示通知（任意）
+      // ScaffoldMessenger.of(context).showSnackBar(...)
     }
   }
 
