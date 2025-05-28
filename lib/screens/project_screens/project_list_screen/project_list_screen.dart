@@ -3,7 +3,7 @@ import 'package:uuid/uuid.dart';
 import '../../../models/project.dart';
 import '../../../services/project_service.dart';
 import '../../../theme/app_theme.dart';
-import '../../../widgets/common/app_scaffold.dart';
+import '../../../widgets/common/drawer/app_scaffold.dart';
 import '../project_detail_screen/project_detail_screen.dart';
 import 'project_list_empty.dart';
 import 'project_list_item.dart';
