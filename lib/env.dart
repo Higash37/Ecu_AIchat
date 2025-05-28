@@ -14,19 +14,7 @@ class AppConfig {
   static String get envName => isLocal ? "開発環境" : "公開環境";
 
   // Supabase接続情報
-  static final String supabaseUrl =
-      isLocal
-          ? 'http://localhost:54321' // ローカルSupabaseのURL（例）
-          : String.fromEnvironment(
-            'SUPABASE_URL',
-            defaultValue: 'https://your-supabase-project.supabase.co',
-          );
-
+  static final String supabaseUrl = 'https://kppzjurayiusfpstobdn.supabase.co';
   static final String supabaseAnonKey =
-      isLocal
-          ? 'ローカル用のanonキー' // ローカル用のキー
-          : String.fromEnvironment(
-            'SUPABASE_ANON_KEY',
-            defaultValue: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
-          );
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtwcHpqdXJheWl1c2Zwc3RvYmRuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDcxNzA4NzcsImV4cCI6MjA2Mjc0Njg3N30.VJqAOQtRMhm-JFTPClrI_oA-pY-Ckl9EdMEex5-jFqg';
 }

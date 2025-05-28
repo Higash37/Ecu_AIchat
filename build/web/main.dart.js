@@ -7681,7 +7681,7 @@ var $async$aKh=A.u(function(a,b){if(a===1)return A.v(b,r)
 while(true)switch(s){case 0:if($.ab==null)A.aNT()
 $.ab.toString
 s=2
-return A.r(A.aul("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...","https://your-supabase-project.supabase.co"),$async$aKh)
+return A.r(A.aul("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtwcHpqdXJheWl1c2Zwc3RvYmRuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDcxNzA4NzcsImV4cCI6MjA2Mjc0Njg3N30.VJqAOQtRMhm-JFTPClrI_oA-pY-Ckl9EdMEex5-jFqg","https://kppzjurayiusfpstobdn.supabase.co"),$async$aKh)
 case 2:if($.ab==null)A.aNT()
 q=$.ab
 q.toString
