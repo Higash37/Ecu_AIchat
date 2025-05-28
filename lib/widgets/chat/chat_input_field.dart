@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../theme/app_theme.dart';
 
 class ChatInputField extends StatefulWidget {
@@ -34,8 +35,11 @@ class _ChatInputFieldState extends State<ChatInputField> {
   }
 
   void _handleSend() {
-    if (_controller.text.isEmpty) return;
-
+    if (_controller.text.isEmpty) {
+      HapticFeedback.heavyImpact(); // 空送信時は強い振動
+      return;
+    }
+    HapticFeedback.lightImpact(); // 送信時は軽い振動
     // フォーカスを外してキーボードを閉じる
     FocusScope.of(context).unfocus();
 

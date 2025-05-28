@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, StreamingResponse
 from dotenv import load_dotenv
 from openai import OpenAI
+from supabase import create_client, Client
 import os
 import pathlib
 import json
@@ -27,6 +28,11 @@ app.add_middleware(
 
 # ✅ OpenAIクライアント（.envファイルからOPENAI_API_KEYを読み込み）
 client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+
+# Supabaseクライアント
+SUPABASE_URL = os.environ.get("SUPABASE_URL")
+SUPABASE_KEY = os.environ.get("SUPABASE_ANON_KEY")
+supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 # --- 独自AIエージェント: DBやOpenAIの裏で“住み着く”知識グラフ・推論エンジン ---
 class ResidentAIAgent:
@@ -80,6 +86,50 @@ async def health_check():
     """
     return {"status": "ok", "message": "API is running"}
 
+def generate_problem_prompt(
+    user_profile=None,
+    quiz_type="multiple_choice",
+    level="英検2級",
+    tags=None,
+    layout="quiz_card_v1",
+    count=1
+):
+    profile_context = ""
+    if user_profile:
+        profile_context += (
+            f"このユーザーは「{user_profile.get('性格', '未知')}」な性格で、"
+            f"「{user_profile.get('傾向', '不明')}」な傾向があります。\n"
+        )
+    tags_text = ", ".join(tags) if tags else "一般的な文法・語彙"
+    prompt = {
+        "role": "system",
+        "content": (
+            f"{profile_context}"
+            f"あなたは教育AIです。以下の条件で **{count}問** の問題を出題してください。\n"
+            f"- 出題タイプ: {quiz_type}\n"
+            f"- 難易度: {level}\n"
+            f"- 出題範囲: {tags_text}\n"
+            f"- レイアウトテンプレート: {layout}\n\n"
+            "【出題ルール】\n"
+            "1. 各問題には文脈・応用・誤答誘導を含めること。\n"
+            "2. 出力形式は以下のJSON配列として返すこと：\n"
+            "[\n"
+            "  {\n"
+            "    \"type\": \"multiple_choice\",\n"
+            "    \"layout\": \"quiz_card_v1\",\n"
+            "    \"title\": \"前置詞の使い分け\",\n"
+            "    \"question\": \"...\",\n"
+            "    \"options\": [\"...\", \"...\", \"...\", \"...\"],\n"
+            "    \"answer\": \"...\",\n"
+            "    \"explanation\": \"...\",\n"
+            "    \"difficulty\": \"英検2級\",\n"
+            "    \"tags\": [\"to不定詞\", \"前置詞\"]\n"
+            "  }, ...\n"
+            "]"
+        )
+    }
+    return prompt
+
 @app.post("/chat")
 async def chat(request: Request):
     data = await request.json()
@@ -87,12 +137,50 @@ async def chat(request: Request):
     mode = data.get("mode", "normal")
     model = data.get("model", "gpt-4o")
     user_id = data.get("user_id", None)
+    question = messages[-1]["content"] if messages else ""
+    context = json.dumps(messages[:-1]) if len(messages) > 1 else None
+    quiz_type = data.get("quiz_type") or "multiple_choice"
+    level = data.get("level") or "英検2級"
+    tags = data.get("tags") or []
+    layout = data.get("layout") or "quiz_card_v1"
+    count = int(data.get("count", 1))
 
-    # Function callingで感情ラベルも取得
-    system_prompt = {
-        "role": "system",
-        "content": "あなたは教育AIアシスタントです。ユーザーの発言やAIの返答の感情を一言でラベル化してください（例: ポジティブ, ネガティブ, 喜び, 怒り, 驚き, 悲しみ, ニュートラル など）。返答と感情ラベルをJSON形式で返してください。例: {\"reply\": \"...\", \"emotion\": \"ポジティブ\"}"
-    }
+    # --- キャッシュ検索（count, layout, tagsも含めて一意化） ---
+    cache_query = supabase.table("chat_qa_cache").select("*") \
+        .eq("user_id", user_id) \
+        .eq("model", model) \
+        .eq("question", question) \
+        .eq("count", count) \
+        .eq("layout", layout)
+    if tags:
+        cache_query = cache_query.eq("tags", json.dumps(tags))
+    if context:
+        cache_query = cache_query.eq("context", context)
+    cache_result = cache_query.execute()
+    if cache_result.data and len(cache_result.data) > 0:
+        cached = cache_result.data[0]
+        return JSONResponse(content={
+            "reply": cached["answer"],
+            "emotion": cached.get("emotion", "ニュートラル"),
+            "creative": cached.get("creative")
+        }, media_type="application/json; charset=utf-8")
+
+    # --- 出題意図の自動分類・プロファイル連携 ---
+    user_profile = resident_ai.user_profiles.get(user_id)
+    if any(x in question for x in ["問題生成", "問題を作って", "quiz", "問題を出して", "問題作成", "問題を自動生成"]):
+        system_prompt = generate_problem_prompt(
+            user_profile=user_profile,
+            quiz_type=quiz_type,
+            level=level,
+            tags=tags,
+            layout=layout,
+            count=count
+        )
+    else:
+        system_prompt = {
+            "role": "system",
+            "content": "あなたは教育AIアシスタントです。ユーザーの発言やAIの返答の感情を一言でラベル化してください（例: ポジティブ, ネガティブ, 喜び, 怒り, 驚き, 悲しみ, ニュートラル など）。返答と感情ラベルをJSON形式で返してください。例: {\"reply\": \"...\", \"emotion\": \"ポジティブ\"}"
+        }
     full_messages = [system_prompt] + messages
 
     # --- ResidentAIによる独自発想・仮説生成 ---
@@ -129,6 +217,16 @@ async def chat(request: Request):
             reply = response.choices[0].message.content
             emotion = "ニュートラル"
         print("GPT reply:", reply, "emotion:", emotion)
+        # 生成結果をキャッシュ保存
+        supabase.table("chat_qa_cache").insert({
+            "user_id": user_id,
+            "model": model,
+            "question": question,
+            "context": context,
+            "answer": reply,
+            "emotion": emotion,
+            "creative": creative_result
+        }).execute()
         return JSONResponse(content={
             "reply": reply,
             "emotion": emotion,

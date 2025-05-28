@@ -3,6 +3,7 @@ import 'package:flutter_chat_types/flutter_chat_types.dart' as types;
 import 'package:uuid/uuid.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:flutter/services.dart';
 import '../../../services/message_service.dart';
 import '../../../services/chat_service.dart';
 import '../../../services/local_cache_service.dart';
@@ -23,6 +24,7 @@ class ChatScreenController extends ChangeNotifier {
   final MessageService _messageService = MessageService();
   final ChatService _chatService = ChatService();
   bool chatCreated = false;
+  String _selectedModel = 'gpt-4o';
 
   ChatScreenController({required this.chatId, required this.projectId});
 
@@ -44,6 +46,13 @@ class ChatScreenController extends ChangeNotifier {
     messages.insert(0, welcomeMessage);
     notifyListeners();
   }
+
+  void setModel(String model) {
+    _selectedModel = model;
+    notifyListeners();
+  }
+
+  String get selectedModel => _selectedModel;
 
   Future<void> onSendPressed(BuildContext context, String message) async {
     if (message.trim().isEmpty) return;
@@ -90,7 +99,7 @@ class ChatScreenController extends ChangeNotifier {
     }
     String aiReply = '';
     try {
-      aiReply = await _fetchAIResponse(message);
+      aiReply = await _fetchAIResponse(message, model: _selectedModel);
     } catch (error) {
       final errorMessage = types.TextMessage(
         author: _bot,
@@ -150,6 +159,8 @@ class ChatScreenController extends ChangeNotifier {
     }
     isLoading = false;
     notifyListeners();
+    // AI応答が追加された直後にハプティック
+    HapticFeedback.mediumImpact();
   }
 
   Future<String> _generateChatTitle(String userMsg, String aiMsg) async {
@@ -161,7 +172,10 @@ class ChatScreenController extends ChangeNotifier {
     return prompt.substring(0, 30) + '...';
   }
 
-  Future<String> _fetchAIResponse(String text) async {
+  Future<String> _fetchAIResponse(
+    String text, {
+    String model = 'gpt-4o',
+  }) async {
     final uri = Uri.parse('${AppConfig.apiBaseUrl}/chat');
     final response = await http.post(
       uri,
@@ -170,10 +184,11 @@ class ChatScreenController extends ChangeNotifier {
         "messages": [
           {"role": "user", "content": text},
         ],
+        "model": model,
       }),
     );
     if (response.statusCode != 200) {
-      throw Exception('API error: ${response.statusCode}');
+      throw Exception('API error: \\${response.statusCode}');
     }
     final json = jsonDecode(response.body);
     final reply =
@@ -187,5 +202,28 @@ class ChatScreenController extends ChangeNotifier {
     messages.clear();
     _addWelcomeMessage();
     notifyListeners();
+  }
+
+  /// AI応答生成のキャンセル（UIのみ、実際のストリーム中断は今後対応）
+  void cancelGeneration() {
+    isLoading = false;
+    notifyListeners();
+  }
+
+  /// 最後のユーザーメッセージで再生成（UIのみ、実際のAPI再送信は今後対応）
+  Future<void> regenerateLastMessage(BuildContext context) async {
+    if (messages.isEmpty) return;
+    // 最後のユーザーメッセージを再送信
+    types.Message? lastUserMsg;
+    for (var i = messages.length - 1; i >= 0; i--) {
+      if (messages[i].author.id == user.id &&
+          messages[i] is types.TextMessage) {
+        lastUserMsg = messages[i];
+        break;
+      }
+    }
+    if (lastUserMsg != null && lastUserMsg is types.TextMessage) {
+      await onSendPressed(context, lastUserMsg.text);
+    }
   }
 }
