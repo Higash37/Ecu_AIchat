@@ -149,8 +149,9 @@ async def chat(request: Request):
         .eq("question", question) \
         .eq("count", count) \
         .eq("layout", layout)
-    if tags:
-        cache_query = cache_query.eq("tags", json.dumps(tags))
+    # tags条件は使わない（PostgRESTの制約回避）
+    # if tags:
+    #     cache_query = cache_query.eq("tags", json.dumps(tags))
     if context:
         cache_query = cache_query.eq("context", context)
     cache_result = cache_query.execute()
