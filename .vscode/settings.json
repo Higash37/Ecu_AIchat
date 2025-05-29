@@ -3,6 +3,7 @@
     "aiedu",
     "buildlog",
     "dotenv",
+    "eventsource",
     "fastapi",
     "gradlew",
     "higash",

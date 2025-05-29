@@ -17,7 +17,8 @@ class ChatScreen extends StatefulWidget {
 }
 
 class _ChatScreenState extends State<ChatScreen> {
-  late ChatScreenController _controller;
+  ChatScreenController? _controller;
+  late Future<void> _initFuture;
 
   @override
   void initState() {
@@ -26,12 +27,13 @@ class _ChatScreenState extends State<ChatScreen> {
       chatId: widget.chatId,
       projectId: widget.projectId,
     );
-    _controller.addListener(_onControllerChanged);
+    _initFuture = _controller!.init();
+    _controller!.addListener(_onControllerChanged);
   }
 
   @override
   void dispose() {
-    _controller.removeListener(_onControllerChanged);
+    _controller?.removeListener(_onControllerChanged);
     super.dispose();
   }
 
@@ -57,107 +59,211 @@ class _ChatScreenState extends State<ChatScreen> {
           },
         ),
       ],
-      body: Column(
-        children: [
-          // --- モデル切り替えドロップダウンはヘッダー(actions)のみで本文には表示しない ---
-          Expanded(
-            child: Container(
-              color: AppTheme.backgroundColor,
-              child:
-                  _controller.messages.isEmpty
-                      ? Center(
-                        child: Text(
-                          '最初のメッセージを送信してください',
-                          style: TextStyle(color: Colors.grey.shade600),
-                        ),
-                      )
-                      : Stack(
-                        children: [
-                          ListView.builder(
-                            reverse: false, // 並び順: user→AI→user→AI...
-                            padding: const EdgeInsets.only(top: 16, bottom: 16),
-                            itemCount: _controller.messages.length,
-                            itemBuilder: (context, index) {
-                              final message =
-                                  _controller.messages[index]
-                                      as types.TextMessage;
-                              final isUserMessage =
-                                  message.author.id == _controller.user.id;
-                              return MarkdownMessage(
-                                message: message,
-                                isUserMessage: isUserMessage,
-                              );
-                            },
-                          ),
-                          if (_controller.isLoading)
-                            Positioned(
-                              bottom: 0,
-                              left: 0,
-                              right: 0,
-                              child: Container(
-                                color: Colors.white.withOpacity(0.8),
-                                padding: const EdgeInsets.all(16),
+      body: FutureBuilder<void>(
+        future: _initFuture,
+        builder: (context, snapshot) {
+          // --- 極限まで高速表示: 履歴ロード中もUI即表示・入力即可能 ---
+          final isLoading = snapshot.connectionState == ConnectionState.waiting;
+          return Column(
+            children: [
+              Expanded(
+                child: Container(
+                  color: AppTheme.backgroundColor,
+                  child: Stack(
+                    children: [
+                      // --- メッセージリスト ---
+                      if (_controller!.messages.isEmpty && isLoading)
+                        // スケルトンバブル（履歴ロード中・メッセージなし）
+                        ListView.builder(
+                          reverse: true,
+                          padding: const EdgeInsets.only(top: 16, bottom: 16),
+                          itemCount: 3,
+                          itemBuilder:
+                              (context, index) => Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 8,
+                                  horizontal: 16,
+                                ),
                                 child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.end,
                                   children: [
-                                    const SizedBox(
-                                      width: 20,
-                                      height: 20,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                        color: AppTheme.primaryColor,
+                                    Container(
+                                      width: 36,
+                                      height: 36,
+                                      decoration: BoxDecoration(
+                                        color: Colors.grey.shade300,
+                                        shape: BoxShape.circle,
                                       ),
                                     ),
-                                    const SizedBox(width: 16),
-                                    Text(
-                                      'AIが回答を考えています...',
-                                      style: TextStyle(
-                                        color: Colors.grey.shade800,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 16),
-                                    ElevatedButton.icon(
-                                      icon: const Icon(Icons.stop),
-                                      label: const Text('停止'),
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: Colors.redAccent,
-                                        foregroundColor: Colors.white,
-                                        minimumSize: const Size(60, 36),
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 8,
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Container(
+                                        height: 24 + (index * 8),
+                                        decoration: BoxDecoration(
+                                          color: Colors.grey.shade200,
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
                                         ),
                                       ),
-                                      onPressed: () {
-                                        _controller.cancelGeneration();
-                                      },
-                                    ),
-                                    const SizedBox(width: 8),
-                                    OutlinedButton.icon(
-                                      icon: const Icon(Icons.refresh),
-                                      label: const Text('再生成'),
-                                      style: OutlinedButton.styleFrom(
-                                        minimumSize: const Size(60, 36),
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 8,
-                                        ),
-                                      ),
-                                      onPressed: () {
-                                        _controller.regenerateLastMessage(
-                                          context,
-                                        );
-                                      },
                                     ),
                                   ],
                                 ),
                               ),
+                        )
+                      else
+                        AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 350),
+                          switchInCurve: Curves.easeOut,
+                          switchOutCurve: Curves.easeIn,
+                          child: ListView.builder(
+                            key: ValueKey(_controller!.messages.length),
+                            reverse: true,
+                            padding: const EdgeInsets.only(top: 16, bottom: 16),
+                            itemCount: _controller!.messages.length,
+                            itemBuilder: (context, index) {
+                              final message =
+                                  _controller!.messages[_controller!
+                                              .messages
+                                              .length -
+                                          1 -
+                                          index]
+                                      as types.TextMessage;
+                              final isUserMessage =
+                                  message.author.id == _controller!.user.id;
+                              // AI応答ストリーミング中の最新AIメッセージにはアニメーションカーソルを表示
+                              final isLatestAI =
+                                  !isUserMessage &&
+                                  index == 0 &&
+                                  _controller!.isLoading;
+                              return Stack(
+                                children: [
+                                  MarkdownMessage(
+                                    message: message,
+                                    isUserMessage: isUserMessage,
+                                  ),
+                                  if (isLatestAI)
+                                    Positioned(
+                                      right: isUserMessage ? 8 : null,
+                                      left: isUserMessage ? null : 8,
+                                      bottom: 6,
+                                      child: SizedBox(
+                                        width: 18,
+                                        height: 18,
+                                        child: _BlinkingCursor(),
+                                      ),
+                                    ),
+                                ],
+                              );
+                            },
+                          ),
+                        ),
+                      // --- AI応答ローディング ---
+                      if (_controller!.isLoading)
+                        Positioned(
+                          bottom: 0,
+                          left: 0,
+                          right: 0,
+                          child: Container(
+                            color: Colors.white.withOpacity(0.8),
+                            padding: const EdgeInsets.all(16),
+                            child: Row(
+                              children: [
+                                const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: AppTheme.primaryColor,
+                                  ),
+                                ),
+                                const SizedBox(width: 16),
+                                Text(
+                                  'AIが回答を考えています...',
+                                  style: TextStyle(color: Colors.grey.shade800),
+                                ),
+                                const SizedBox(width: 16),
+                                ElevatedButton.icon(
+                                  icon: const Icon(Icons.stop),
+                                  label: const Text('停止'),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.redAccent,
+                                    foregroundColor: Colors.white,
+                                    minimumSize: const Size(60, 36),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                    ),
+                                  ),
+                                  onPressed: () {
+                                    _controller?.cancelGeneration();
+                                  },
+                                ),
+                                const SizedBox(width: 8),
+                                OutlinedButton.icon(
+                                  icon: const Icon(Icons.refresh),
+                                  label: const Text('再生成'),
+                                  style: OutlinedButton.styleFrom(
+                                    minimumSize: const Size(60, 36),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                    ),
+                                  ),
+                                  onPressed: () {
+                                    _controller?.regenerateLastMessage(context);
+                                  },
+                                ),
+                              ],
                             ),
-                        ],
-                      ),
-            ),
-          ),
-          ChatInputField(
-            onSendPressed: (msg) => _controller.onSendPressed(context, msg),
-          ),
-        ],
+                          ),
+                        ),
+                      // --- 履歴ロード中の超軽量インジケータ（画面右下） ---
+                      if (isLoading)
+                        Positioned(
+                          bottom: 12,
+                          right: 12,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 6,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.85),
+                              borderRadius: BorderRadius.circular(16),
+                              boxShadow: [
+                                BoxShadow(color: Colors.black12, blurRadius: 6),
+                              ],
+                            ),
+                            child: Row(
+                              children: [
+                                SizedBox(
+                                  width: 14,
+                                  height: 14,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: AppTheme.primaryColor,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                const Text(
+                                  '履歴を取得中...',
+                                  style: TextStyle(fontSize: 12),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+              // --- 入力欄は常に即表示・即入力可能 ---
+              ChatInputField(
+                onSendPressed:
+                    (msg) => _controller?.onSendPressed(context, msg),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
@@ -223,7 +329,7 @@ class _ChatScreenState extends State<ChatScreen> {
               ),
               ElevatedButton(
                 onPressed: () {
-                  _controller.clearMessages();
+                  _controller?.clearMessages();
                   Navigator.pop(context);
                 },
                 style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
@@ -280,6 +386,49 @@ class _ModelSelector extends StatelessWidget {
           dropdownColor: Colors.white,
           borderRadius: BorderRadius.circular(8),
           elevation: 4,
+        ),
+      ),
+    );
+  }
+}
+
+// 末尾に追加
+class _BlinkingCursor extends StatefulWidget {
+  @override
+  State<_BlinkingCursor> createState() => _BlinkingCursorState();
+}
+
+class _BlinkingCursorState extends State<_BlinkingCursor>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _opacityAnim;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 900),
+    )..repeat(reverse: true);
+    _opacityAnim = Tween<double>(begin: 1, end: 0.2).animate(_controller);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FadeTransition(
+      opacity: _opacityAnim,
+      child: Container(
+        width: 12,
+        height: 18,
+        decoration: BoxDecoration(
+          color: Colors.grey.shade400,
+          borderRadius: BorderRadius.circular(3),
         ),
       ),
     );

@@ -28,23 +28,66 @@ class ChatScreenController extends ChangeNotifier {
 
   ChatScreenController({required this.chatId, required this.projectId});
 
-  void _addWelcomeMessage() {
-    if (messages.isNotEmpty) return; // 既にメッセージがあれば追加しない
-    final welcomeMessage = types.TextMessage(
-      author: _bot,
-      createdAt: DateTime.now().millisecondsSinceEpoch,
-      id: Uuid().v4(),
-      text:
-          "こんにちは！AI教材チャットへようこそ。\n"
-          "授業の準備や教材作成のお手伝いをします。\n"
-          "以下のような質問ができます：\n\n"
-          "- 「中学2年生向けの英語長文問題を作成して」\n"
-          "- 「数学の二次関数について説明する教材を作って」\n"
-          "- 「古典文学の教え方のコツは？」\n\n"
-          "どのようなお手伝いができますか？",
-    );
-    messages.insert(0, welcomeMessage);
+  Future<void> init() async {
+    final user = await LocalCacheService.getUserInfo();
+    final userId = user?['user_id'] ?? '';
+    await loadChatHistory(userId: userId);
+    // _addWelcomeMessage(); ← 挨拶メッセージ呼び出しを削除
+  }
+
+  /// チャットルームごとに履歴を自動ロード（ローカルキャッシュ即時反映→API取得後差し替え）
+  Future<void> loadChatHistory({String? userId}) async {
+    // 1. まずローカルキャッシュを即時反映
+    messages.clear();
+    List<Message> cached = await LocalCacheService.getCachedMessages(chatId);
+    for (final msg in cached) {
+      messages.add(
+        types.TextMessage(
+          author: msg.sender == 'user' ? _user : _bot,
+          createdAt: msg.createdAt.millisecondsSinceEpoch,
+          id: msg.id,
+          text: msg.content,
+        ),
+      );
+    }
     notifyListeners();
+
+    // 2. API取得を試み、取得できたら差分があればmessagesを更新
+    if (userId != null && userId.isNotEmpty) {
+      try {
+        final history = await _messageService.fetchMessagesByChat(
+          chatId,
+          userId,
+        );
+        // 差分があれば更新
+        if (history.length != cached.length ||
+            !_isSameMessageList(history, cached)) {
+          messages.clear();
+          for (final msg in history) {
+            messages.add(
+              types.TextMessage(
+                author: msg.sender == 'user' ? _user : _bot,
+                createdAt: msg.createdAt.millisecondsSinceEpoch,
+                id: msg.id,
+                text: msg.content,
+              ),
+            );
+          }
+          notifyListeners();
+        }
+      } catch (_) {
+        // API失敗時はキャッシュのまま
+      }
+    }
+  }
+
+  // メッセージリストの内容が同じか判定（idとcontentのみ比較）
+  bool _isSameMessageList(List<Message> a, List<Message> b) {
+    if (a.length != b.length) return false;
+    for (int i = 0; i < a.length; i++) {
+      if (a[i].id != b[i].id || a[i].content != b[i].content) return false;
+    }
+    return true;
   }
 
   void setModel(String model) {
@@ -54,6 +97,7 @@ class ChatScreenController extends ChangeNotifier {
 
   String get selectedModel => _selectedModel;
 
+  /// ストリーミングでAI応答を受信し、1文字ずつ表示
   Future<void> onSendPressed(BuildContext context, String message) async {
     if (message.trim().isEmpty) return;
     isLoading = true;
@@ -97,64 +141,121 @@ class ChatScreenController extends ChangeNotifier {
         return;
       }
     }
-    String aiReply = '';
-    try {
-      aiReply = await _fetchAIResponse(message, model: _selectedModel);
-    } catch (error) {
-      final errorMessage = types.TextMessage(
-        author: _bot,
-        createdAt: DateTime.now().millisecondsSinceEpoch,
-        id: Uuid().v4(),
-        text: "申し訳ありません。エラーが発生しました。\nしばらく経ってからもう一度お試しください。\n\nエラー詳細: $error",
-      );
-      messages.insert(0, errorMessage);
-      isLoading = false;
-      notifyListeners();
-      return;
-    }
-    // --- 保存処理分岐 ---
-    final userMsg = Message(
-      id: Uuid().v4(),
-      chatId: chatId,
-      sender: 'user',
-      content: message,
-      createdAt: DateTime.now(),
-      userId: isLoggedIn ? currentUserId : null,
-    );
-    final aiMsg = Message(
-      id: Uuid().v4(),
-      chatId: chatId,
-      sender: 'ai',
-      content: aiReply,
-      createdAt: DateTime.now(),
-      userId: isLoggedIn ? currentUserId : null,
-    );
-    if (isLoggedIn) {
-      await _messageService.createMessage(userMsg, currentUserId);
-      await _messageService.createMessage(aiMsg, currentUserId);
-    } else {
-      await LocalCacheService.cacheMessages(chatId, [userMsg, aiMsg]);
-    }
+    // --- ユーザーメッセージを即時追加（末尾に追加） ---
     final textMessage = types.TextMessage(
       author: _user,
       createdAt: DateTime.now().millisecondsSinceEpoch,
       id: Uuid().v4(),
       text: message,
     );
+    messages.add(textMessage);
+    notifyListeners();
+
+    // --- AI応答バブルを即時追加（仮テキスト付き） ---
+    final aiMessageId = Uuid().v4();
+    String aiText = '';
     final aiMessage = types.TextMessage(
       author: _bot,
       createdAt: DateTime.now().millisecondsSinceEpoch,
-      id: Uuid().v4(),
-      text: aiReply,
+      id: aiMessageId,
+      text: '...AIが応答を準備中', // 仮テキストを即時表示
     );
-    messages.insert(0, aiMessage);
-    messages.insert(0, textMessage);
-    // --- タイトル自動生成 ---
-    if (messages.length <= 4) {
-      // 最初の2往復でタイトル自動生成
-      final autoTitle = await _generateChatTitle(message, aiReply);
-      if (autoTitle.isNotEmpty && isLoggedIn) {
-        await _chatService.updateChatTitle(chatId, autoTitle);
+    messages.add(aiMessage);
+    notifyListeners();
+
+    // 1秒経ってもストリーム開始しない場合は仮テキストを維持
+    bool streamStarted = false;
+    Future.delayed(const Duration(seconds: 1), () {
+      if (!streamStarted) {
+        final idx = messages.lastIndexWhere((m) => m.id == aiMessageId);
+        if (idx != -1 &&
+            messages[idx] is types.TextMessage &&
+            (messages[idx] as types.TextMessage).text == '...AIが応答を準備中') {
+          messages[idx] = types.TextMessage(
+            author: _bot,
+            createdAt: messages[idx].createdAt,
+            id: aiMessageId,
+            text: 'AIが応答を準備中...（ネットワーク遅延の可能性）',
+          );
+          notifyListeners();
+        }
+      }
+    });
+
+    try {
+      final uri = Uri.parse('${AppConfig.apiBaseUrl}/chat/stream');
+      final request = http.Request('POST', uri);
+      request.headers['Content-Type'] = 'application/json';
+      request.body = jsonEncode({
+        "messages": [
+          {"role": "user", "content": message},
+        ],
+        "model": _selectedModel,
+      });
+      final streamedResponse = await request.send();
+      if (streamedResponse.statusCode != 200) {
+        throw Exception('API error: \\${streamedResponse.statusCode}');
+      }
+      // SSEストリームを1行ずつ受信
+      final utf8Stream = streamedResponse.stream.transform(utf8.decoder);
+      streamStarted = true;
+      await for (final line in utf8Stream) {
+        if (line.trim().isEmpty) continue;
+        if (line.trim() == 'data: [DONE]') break;
+        if (line.startsWith('data:')) {
+          final jsonStr = line.substring(5).trim();
+          try {
+            final tokenObj = jsonDecode(jsonStr);
+            final token = tokenObj['token'] ?? '';
+            aiText += token;
+            // 最新のAIメッセージを更新（末尾を更新）
+            final idx = messages.lastIndexWhere((m) => m.id == aiMessageId);
+            if (idx != -1) {
+              messages[idx] = types.TextMessage(
+                author: _bot,
+                createdAt: messages[idx].createdAt,
+                id: aiMessageId,
+                text: aiText.isEmpty ? '...' : aiText,
+              );
+              notifyListeners();
+            }
+          } catch (_) {}
+        }
+      }
+      // --- 保存処理 ---
+      final userMsg = Message(
+        id: Uuid().v4(),
+        chatId: chatId,
+        sender: 'user',
+        content: message,
+        createdAt: DateTime.now(),
+        userId: isLoggedIn ? currentUserId : null,
+      );
+      final aiMsg = Message(
+        id: Uuid().v4(),
+        chatId: chatId,
+        sender: 'ai',
+        content: aiText,
+        createdAt: DateTime.now(),
+        userId: isLoggedIn ? currentUserId : null,
+      );
+      if (isLoggedIn) {
+        await _messageService.createMessage(userMsg, currentUserId);
+        await _messageService.createMessage(aiMsg, currentUserId);
+      } else {
+        await LocalCacheService.cacheMessages(chatId, [userMsg, aiMsg]);
+      }
+    } catch (error) {
+      // エラー時はAIメッセージをエラー内容で上書き
+      final idx = messages.lastIndexWhere((m) => m.id == aiMessageId);
+      if (idx != -1) {
+        messages[idx] = types.TextMessage(
+          author: _bot,
+          createdAt: messages[idx].createdAt,
+          id: aiMessageId,
+          text: "申し訳ありません。エラーが発生しました。\nしばらく経ってからもう一度お試しください。\n\nエラー詳細: $error",
+        );
+        notifyListeners();
       }
     }
     isLoading = false;
@@ -163,44 +264,8 @@ class ChatScreenController extends ChangeNotifier {
     HapticFeedback.mediumImpact();
   }
 
-  Future<String> _generateChatTitle(String userMsg, String aiMsg) async {
-    // ChatGPT APIやローカルで要約生成（ここでは簡易実装）
-    // 本番はAPIでタイトル生成推奨
-    final prompt = '「$userMsg」$aiMsg';
-    // 30文字以内で要約
-    if (prompt.length <= 30) return prompt;
-    return prompt.substring(0, 30) + '...';
-  }
-
-  Future<String> _fetchAIResponse(
-    String text, {
-    String model = 'gpt-4o',
-  }) async {
-    final uri = Uri.parse('${AppConfig.apiBaseUrl}/chat');
-    final response = await http.post(
-      uri,
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
-        "messages": [
-          {"role": "user", "content": text},
-        ],
-        "model": model,
-      }),
-    );
-    if (response.statusCode != 200) {
-      throw Exception('API error: \\${response.statusCode}');
-    }
-    final json = jsonDecode(response.body);
-    final reply =
-        (json is Map && json.containsKey("reply"))
-            ? json["reply"]
-            : "[返答がありませんでした]";
-    return reply;
-  }
-
   void clearMessages() {
     messages.clear();
-    _addWelcomeMessage();
     notifyListeners();
   }
 

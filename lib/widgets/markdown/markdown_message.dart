@@ -117,29 +117,38 @@ class _MarkdownMessageState extends State<MarkdownMessage> {
                     0.7 // 画面幅の70%
                 : constraints.maxWidth; // スマホでは全幅
 
-        return Center(
+        return Align(
+          alignment:
+              widget.isUserMessage
+                  ? Alignment.centerRight
+                  : Alignment.centerLeft,
           child: SizedBox(
-            width: contentWidth,
+            width: contentWidth * (isWideScreen ? 0.8 : 0.95),
             child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 16.0,
-                vertical: 16.0,
+              padding: EdgeInsets.symmetric(
+                horizontal: widget.isUserMessage ? 8.0 : 16.0,
+                vertical: 8.0,
               ),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment:
+                    widget.isUserMessage
+                        ? CrossAxisAlignment.end
+                        : CrossAxisAlignment.start,
                 children: [
-                  // メッセージヘッダー
                   MarkdownMessageHeader(
                     isUserMessage: widget.isUserMessage,
                     createdAt: widget.message.createdAt,
                   ),
-                  const SizedBox(height: 16),
-
-                  // --- チャットバブル内AIアイコン＋creativeアニメーション ---
-                  if (!widget.isUserMessage)
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
+                  const SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment:
+                        widget.isUserMessage
+                            ? MainAxisAlignment.end
+                            : MainAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (!widget.isUserMessage) ...[
+                        // AIアイコンやcreativeアニメーション
                         AnimatedContainer(
                           duration: const Duration(milliseconds: 500),
                           curve: Curves.easeInOutCubic,
@@ -202,74 +211,39 @@ class _MarkdownMessageState extends State<MarkdownMessage> {
                             ),
                           ),
                         ),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              // 感情アイコン表示
-                              if (!widget.isUserMessage &&
-                                  _currentEmotion != null)
-                                AnimatedContainer(
-                                  duration: const Duration(milliseconds: 400),
-                                  curve: Curves.easeOutBack,
-                                  margin: const EdgeInsets.only(bottom: 8.0),
-                                  child: Row(
-                                    children: [
-                                      AnimatedSwitcher(
-                                        duration: const Duration(
-                                          milliseconds: 400,
-                                        ),
-                                        transitionBuilder: (child, anim) {
-                                          // 感情ごとにアニメーション切替
-                                          switch (_currentEmotion) {
-                                            case '喜び':
-                                              return ScaleTransition(
-                                                scale: anim,
-                                                child: child,
-                                              );
-                                            case '怒り':
-                                              return RotationTransition(
-                                                turns: anim,
-                                                child: child,
-                                              );
-                                            case '悲しみ':
-                                              return FadeTransition(
-                                                opacity: anim,
-                                                child: child,
-                                              );
-                                            default:
-                                              return FadeTransition(
-                                                opacity: anim,
-                                                child: child,
-                                              );
-                                          }
-                                        },
-                                        child: Icon(
-                                          emotionIconMap[_currentEmotion] ??
-                                              Icons.sentiment_satisfied,
-                                          color:
-                                              emotionColorMap[_currentEmotion] ??
-                                              Colors.grey,
-                                          size: 22,
-                                          key: ValueKey(_currentEmotion),
-                                        ),
-                                      ),
-                                      const SizedBox(width: 6),
-                                      Text(
-                                        _currentEmotion!,
-                                        style: TextStyle(
-                                          color:
-                                              emotionColorMap[_currentEmotion] ??
-                                              Colors.grey,
-                                          fontSize: 13,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-
-                              // メッセージコンテンツ (吹き出しボックスなし)
+                      ],
+                      Flexible(
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color:
+                                widget.isUserMessage
+                                    ? Colors.blue.shade50
+                                    : Colors.white,
+                            borderRadius: BorderRadius.only(
+                              topLeft: const Radius.circular(16),
+                              topRight: const Radius.circular(16),
+                              bottomLeft:
+                                  widget.isUserMessage
+                                      ? const Radius.circular(16)
+                                      : const Radius.circular(4),
+                              bottomRight:
+                                  widget.isUserMessage
+                                      ? const Radius.circular(4)
+                                      : const Radius.circular(16),
+                            ),
+                            border: Border.all(
+                              color:
+                                  widget.isUserMessage
+                                      ? Colors.blue.shade200
+                                      : Colors.grey.shade300,
+                              width: 1.0,
+                            ),
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 12,
+                          ),
+                          child:
                               (!widget.isUserMessage && !_animationCompleted)
                                   ? AnimatedTextKit(
                                     isRepeatingAnimation: false,
@@ -303,145 +277,190 @@ class _MarkdownMessageState extends State<MarkdownMessage> {
                                     animationCompleted: _animationCompleted,
                                     quizzes: _quizzes,
                                   ),
-
-                              // --- reasoning（AIの思考経路）をタップで展開 ---
-                              if (!widget.isUserMessage &&
-                                  widget.message.metadata != null &&
-                                  widget.message.metadata!['creative'] ==
-                                      true &&
-                                  widget.message.metadata!['reasoning'] != null)
-                                Padding(
-                                  padding: const EdgeInsets.only(bottom: 8.0),
-                                  child: _ReasoningExpandable(
-                                    reasoning:
-                                        widget.message.metadata!['reasoning']
-                                            as String,
-                                  ),
-                                ),
-
-                              // --- creative時のアニメ強化 ---
-                              if (!widget.isUserMessage &&
-                                  widget.message.metadata != null &&
-                                  widget.message.metadata!['creative'] == true)
-                                Padding(
-                                  padding: const EdgeInsets.only(bottom: 8.0),
-                                  child: AnimatedOpacity(
-                                    duration: const Duration(milliseconds: 600),
-                                    opacity: 1.0,
-                                    child: Row(
-                                      children: [
-                                        Icon(
-                                          Icons.bolt,
-                                          color: Colors.amber,
-                                          size: 20,
-                                        ),
-                                        const SizedBox(width: 6),
-                                        Text(
-                                          'ひらめき！',
-                                          style: TextStyle(
-                                            color: Colors.amber.shade800,
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 13,
-                                          ),
-                                        ),
-                                        const SizedBox(width: 6),
-                                        AnimatedContainer(
-                                          duration: const Duration(
-                                            milliseconds: 600,
-                                          ),
-                                          width: 18,
-                                          height: 18,
-                                          decoration: BoxDecoration(
-                                            shape: BoxShape.circle,
-                                            gradient: LinearGradient(
-                                              colors: [
-                                                Colors.amber,
-                                                Colors.pinkAccent,
-                                                Colors.cyan,
-                                              ],
-                                            ),
-                                            boxShadow: [
-                                              BoxShadow(
-                                                color: Colors.amber.withOpacity(
-                                                  0.5,
-                                                ),
-                                                blurRadius: 8,
-                                                spreadRadius: 1,
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-
-                              // --- 知識グラフ可視化UI ---
-                              if (!widget.isUserMessage &&
-                                  widget.message.metadata != null &&
-                                  widget.message.metadata!['knowledge_graph'] !=
-                                      null)
-                                Padding(
-                                  padding: const EdgeInsets.only(bottom: 8.0),
-                                  child: _KnowledgeGraphMiniView(
-                                    graphData:
-                                        widget
-                                            .message
-                                            .metadata!['knowledge_graph'],
-                                  ),
-                                ),
-
-                              // AIメッセージの場合のアクションボタン
-                              if (!widget.isUserMessage)
-                                Padding(
-                                  padding: const EdgeInsets.only(top: 16.0),
-                                  child: MarkdownMessageActionButtons(
-                                    onCopy: () {
-                                      Clipboard.setData(
-                                        ClipboardData(
-                                          text: widget.message.text,
-                                        ),
-                                      );
-                                      ScaffoldMessenger.of(
-                                        context,
-                                      ).showSnackBar(
-                                        const SnackBar(
-                                          content: Text('テキストをコピーしました'),
-                                        ),
-                                      );
-                                    },
-                                    onRegenerate: () {
-                                      ScaffoldMessenger.of(
-                                        context,
-                                      ).showSnackBar(
-                                        const SnackBar(
-                                          content: Text('再生成機能は準備中です'),
-                                        ),
-                                      );
-                                    },
-                                    onPdfPreview: () {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder:
-                                              (context) => PdfPreviewScreen(
-                                                markdownText:
-                                                    widget.message.text,
-                                              ),
-                                        ),
-                                      );
-                                    },
-                                  ),
-                                ), // セパレータ
-                            ],
+                        ),
+                      ),
+                      if (widget.isUserMessage) ...[
+                        // ユーザーアイコン
+                        Padding(
+                          padding: const EdgeInsets.only(left: 8.0, top: 2),
+                          child: CircleAvatar(
+                            backgroundColor: Colors.grey.shade300,
+                            radius: 16,
+                            child: const Icon(
+                              Icons.person,
+                              size: 16,
+                              color: Colors.white,
+                            ),
                           ),
                         ),
                       ],
+                    ],
+                  ),
+
+                  // 感情アイコン表示
+                  if (!widget.isUserMessage && _currentEmotion != null)
+                    AnimatedContainer(
+                      duration: const Duration(milliseconds: 400),
+                      curve: Curves.easeOutBack,
+                      margin: const EdgeInsets.only(bottom: 8.0),
+                      child: Row(
+                        children: [
+                          AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 400),
+                            transitionBuilder: (child, anim) {
+                              // 感情ごとにアニメーション切替
+                              switch (_currentEmotion) {
+                                case '喜び':
+                                  return ScaleTransition(
+                                    scale: anim,
+                                    child: child,
+                                  );
+                                case '怒り':
+                                  return RotationTransition(
+                                    turns: anim,
+                                    child: child,
+                                  );
+                                case '悲しみ':
+                                  return FadeTransition(
+                                    opacity: anim,
+                                    child: child,
+                                  );
+                                default:
+                                  return FadeTransition(
+                                    opacity: anim,
+                                    child: child,
+                                  );
+                              }
+                            },
+                            child: Icon(
+                              emotionIconMap[_currentEmotion] ??
+                                  Icons.sentiment_satisfied,
+                              color:
+                                  emotionColorMap[_currentEmotion] ??
+                                  Colors.grey,
+                              size: 22,
+                              key: ValueKey(_currentEmotion),
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            _currentEmotion!,
+                            style: TextStyle(
+                              color:
+                                  emotionColorMap[_currentEmotion] ??
+                                  Colors.grey,
+                              fontSize: 13,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
 
-                  // セパレータ
-                  const SizedBox(height: 16),
-                  const Divider(),
+                  // --- reasoning（AIの思考経路）をタップで展開 ---
+                  if (!widget.isUserMessage &&
+                      widget.message.metadata != null &&
+                      widget.message.metadata!['creative'] == true &&
+                      widget.message.metadata!['reasoning'] != null)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 8.0),
+                      child: _ReasoningExpandable(
+                        reasoning:
+                            widget.message.metadata!['reasoning'] as String,
+                      ),
+                    ),
+
+                  // --- creative時のアニメ強化 ---
+                  if (!widget.isUserMessage &&
+                      widget.message.metadata != null &&
+                      widget.message.metadata!['creative'] == true)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 8.0),
+                      child: AnimatedOpacity(
+                        duration: const Duration(milliseconds: 600),
+                        opacity: 1.0,
+                        child: Row(
+                          children: [
+                            Icon(Icons.bolt, color: Colors.amber, size: 20),
+                            const SizedBox(width: 6),
+                            Text(
+                              'ひらめき！',
+                              style: TextStyle(
+                                color: Colors.amber.shade800,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13,
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            AnimatedContainer(
+                              duration: const Duration(milliseconds: 600),
+                              width: 18,
+                              height: 18,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                gradient: LinearGradient(
+                                  colors: [
+                                    Colors.amber,
+                                    Colors.pinkAccent,
+                                    Colors.cyan,
+                                  ],
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.amber.withOpacity(0.5),
+                                    blurRadius: 8,
+                                    spreadRadius: 1,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                  // --- 知識グラフ可視化UI ---
+                  if (!widget.isUserMessage &&
+                      widget.message.metadata != null &&
+                      widget.message.metadata!['knowledge_graph'] != null)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 8.0),
+                      child: _KnowledgeGraphMiniView(
+                        graphData: widget.message.metadata!['knowledge_graph'],
+                      ),
+                    ),
+
+                  // AIメッセージの場合のアクションボタン
+                  if (!widget.isUserMessage)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 16.0),
+                      child: MarkdownMessageActionButtons(
+                        onCopy: () {
+                          Clipboard.setData(
+                            ClipboardData(text: widget.message.text),
+                          );
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('テキストをコピーしました')),
+                          );
+                        },
+                        onRegenerate: () {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('再生成機能は準備中です')),
+                          );
+                        },
+                        onPdfPreview: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder:
+                                  (context) => PdfPreviewScreen(
+                                    markdownText: widget.message.text,
+                                  ),
+                            ),
+                          );
+                        },
+                      ),
+                    ), // セパレータ
                 ],
               ),
             ),
