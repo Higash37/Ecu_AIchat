@@ -159,7 +159,7 @@ class ChatScreenController extends ChangeNotifier {
       author: _bot,
       createdAt: DateTime.now().millisecondsSinceEpoch,
       id: aiMessageId,
-      text: '...AIが応答を準備中',
+      text: 'AIが応答を考えています...', // 仮テキストのみ
     );
     messages.add(aiMessage);
     // 並び順を交互に再構成
@@ -176,7 +176,7 @@ class ChatScreenController extends ChangeNotifier {
         final idx = messages.lastIndexWhere((m) => m.id == aiMessageId);
         if (idx != -1 &&
             messages[idx] is types.TextMessage &&
-            (messages[idx] as types.TextMessage).text == '...AIが応答を準備中') {
+            (messages[idx] as types.TextMessage).text == 'AIが応答を考えています...') {
           messages[idx] = types.TextMessage(
             author: _bot,
             createdAt: messages[idx].createdAt,
@@ -202,7 +202,7 @@ class ChatScreenController extends ChangeNotifier {
       if (streamedResponse.statusCode != 200) {
         throw Exception('API error: \\${streamedResponse.statusCode}');
       }
-      // SSEストリームを1行ずつ受信
+      // SSEストリームを1行ずつ受信し全文を連結
       final utf8Stream = streamedResponse.stream.transform(utf8.decoder);
       streamStarted = true;
       await for (final line in utf8Stream) {
@@ -213,24 +213,22 @@ class ChatScreenController extends ChangeNotifier {
           try {
             final tokenObj = jsonDecode(jsonStr);
             final token = tokenObj['token'] ?? '';
-            // --- ここでtokenが1文字ずつでも全文を連結 ---
             aiText += token;
-            // 最新のAIメッセージを更新（全文を反映）
-            final idx = messages.lastIndexWhere((m) => m.id == aiMessageId);
-            if (idx != -1) {
-              // 既存のtextにtokenを追加するのではなく、aiText全文で上書き
-              messages[idx] = types.TextMessage(
-                author: _bot,
-                createdAt: messages[idx].createdAt,
-                id: aiMessageId,
-                text: aiText,
-              );
-              notifyListeners();
-            }
           } catch (e) {
             // JSONパースエラー等は無視
           }
         }
+      }
+      // --- ここで全文を一度に反映 ---
+      final idx = messages.lastIndexWhere((m) => m.id == aiMessageId);
+      if (idx != -1) {
+        messages[idx] = types.TextMessage(
+          author: _bot,
+          createdAt: messages[idx].createdAt,
+          id: aiMessageId,
+          text: aiText.isEmpty ? 'AI応答が取得できませんでした' : aiText,
+        );
+        notifyListeners();
       }
       // --- 保存処理 ---
       final userMsg = Message(
