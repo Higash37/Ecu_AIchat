@@ -40,8 +40,9 @@ class ChatScreenController extends ChangeNotifier {
     // 1. まずローカルキャッシュを即時反映
     messages.clear();
     List<Message> cached = await LocalCacheService.getCachedMessages(chatId);
+    List<types.Message> temp = [];
     for (final msg in cached) {
-      messages.add(
+      temp.add(
         types.TextMessage(
           author: msg.sender == 'user' ? _user : _bot,
           createdAt: msg.createdAt.millisecondsSinceEpoch,
@@ -50,6 +51,7 @@ class ChatScreenController extends ChangeNotifier {
         ),
       );
     }
+    messages.addAll(_pairOrder(temp));
     notifyListeners();
 
     // 2. API取得を試み、取得できたら差分があればmessagesを更新
@@ -59,12 +61,12 @@ class ChatScreenController extends ChangeNotifier {
           chatId,
           userId,
         );
-        // 差分があれば更新
         if (history.length != cached.length ||
             !_isSameMessageList(history, cached)) {
           messages.clear();
+          List<types.Message> temp2 = [];
           for (final msg in history) {
-            messages.add(
+            temp2.add(
               types.TextMessage(
                 author: msg.sender == 'user' ? _user : _bot,
                 createdAt: msg.createdAt.millisecondsSinceEpoch,
@@ -73,6 +75,7 @@ class ChatScreenController extends ChangeNotifier {
               ),
             );
           }
+          messages.addAll(_pairOrder(temp2));
           notifyListeners();
         }
       } catch (_) {
@@ -149,8 +152,6 @@ class ChatScreenController extends ChangeNotifier {
       text: message,
     );
     messages.add(textMessage);
-    notifyListeners();
-
     // --- AI応答バブルを即時追加（仮テキスト付き） ---
     final aiMessageId = Uuid().v4();
     String aiText = '';
@@ -158,9 +159,14 @@ class ChatScreenController extends ChangeNotifier {
       author: _bot,
       createdAt: DateTime.now().millisecondsSinceEpoch,
       id: aiMessageId,
-      text: '...AIが応答を準備中', // 仮テキストを即時表示
+      text: '...AIが応答を準備中',
     );
     messages.add(aiMessage);
+    // 並び順を交互に再構成
+    final ordered = _pairOrder(List<types.Message>.from(messages));
+    messages
+      ..clear()
+      ..addAll(ordered);
     notifyListeners();
 
     // 1秒経ってもストリーム開始しない場合は仮テキストを維持
@@ -290,5 +296,29 @@ class ChatScreenController extends ChangeNotifier {
     if (lastUserMsg != null && lastUserMsg is types.TextMessage) {
       await onSendPressed(context, lastUserMsg.text);
     }
+  }
+
+  /// ユーザー→AI→ユーザー→AIの交互順で並べる（古い順からペアで下に追加）
+  List<types.Message> _pairOrder(List<types.Message> list) {
+    final List<types.Message> ordered = [];
+    int i = 0;
+    while (i < list.length) {
+      // ユーザー
+      if (list[i].author.id == _user.id) {
+        ordered.add(list[i]);
+        // 次がAIならペアで追加
+        if (i + 1 < list.length && list[i + 1].author.id == _bot.id) {
+          ordered.add(list[i + 1]);
+          i += 2;
+        } else {
+          i++;
+        }
+      } else {
+        // 先頭がAIの場合もそのまま追加
+        ordered.add(list[i]);
+        i++;
+      }
+    }
+    return ordered;
   }
 }
