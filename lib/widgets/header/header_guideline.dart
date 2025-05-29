@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../theme/app_theme.dart';
 
 /// 見出しの階層構造を視覚的に表現するウィジェット
@@ -104,7 +103,8 @@ class HeaderGuideline extends StatelessWidget {
               padding: const EdgeInsets.only(top: 2.0),
               child: Text(
                 header.title,
-                style: GoogleFonts.notoSans(
+                style: TextStyle(
+                  fontFamily: 'NotoSansJP',
                   fontSize: isH1 ? 16 : (isH2 ? 14 : 13),
                   fontWeight: isH1 ? FontWeight.bold : FontWeight.w500,
                   color:

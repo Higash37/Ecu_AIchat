@@ -1,8 +1,8 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_chat_types/flutter_chat_types.dart' as types;
 import 'package:animated_text_kit/animated_text_kit.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../theme/app_theme.dart';
 import '../../models/quiz.dart';
 import '../pdf/pdf_preview_screen.dart';
@@ -251,7 +251,8 @@ class _MarkdownMessageState extends State<MarkdownMessage> {
                                                 _convertSuperscript(
                                                   widget.message.text,
                                                 ),
-                                                textStyle: GoogleFonts.notoSans(
+                                                textStyle: TextStyle(
+                                                  fontFamily: 'NotoSansJP',
                                                   fontSize: 15.0,
                                                   color: AppTheme.textPrimary,
                                                   height: 1.5,
@@ -279,31 +280,21 @@ class _MarkdownMessageState extends State<MarkdownMessage> {
                                   child:
                                       (!widget.isUserMessage &&
                                               !_animationCompleted)
-                                          ? AnimatedTextKit(
-                                            isRepeatingAnimation: false,
-                                            totalRepeatCount: 1,
-                                            displayFullTextOnTap: true,
-                                            stopPauseOnTap: true,
+                                          ? _AnimatedTypingText(
+                                            text: _convertSuperscript(
+                                              widget.message.text,
+                                            ),
+                                            style: const TextStyle(
+                                              fontFamily: 'NotoSansJP',
+                                              fontSize: 15.0,
+                                              color: AppTheme.textPrimary,
+                                              height: 1.5,
+                                            ),
                                             onFinished: () {
                                               setState(() {
                                                 _animationCompleted = true;
                                               });
                                             },
-                                            animatedTexts: [
-                                              TypewriterAnimatedText(
-                                                _convertSuperscript(
-                                                  widget.message.text,
-                                                ),
-                                                textStyle: GoogleFonts.notoSans(
-                                                  fontSize: 15.0,
-                                                  color: AppTheme.textPrimary,
-                                                  height: 1.5,
-                                                ),
-                                                speed: const Duration(
-                                                  milliseconds: 30,
-                                                ),
-                                              ),
-                                            ],
                                           )
                                           : MarkdownMessageContent(
                                             text: _convertSuperscript(
@@ -608,5 +599,59 @@ class _KnowledgeGraphMiniView extends StatelessWidget {
       );
     }
     return const SizedBox.shrink();
+  }
+}
+
+// --- ここからAIメッセージのアニメーション表示を独自実装に置き換え ---
+class _AnimatedTypingText extends StatefulWidget {
+  final String text;
+  final TextStyle style;
+  final VoidCallback? onFinished;
+  const _AnimatedTypingText({
+    required this.text,
+    required this.style,
+    this.onFinished,
+  });
+  @override
+  State<_AnimatedTypingText> createState() => _AnimatedTypingTextState();
+}
+
+class _AnimatedTypingTextState extends State<_AnimatedTypingText> {
+  String _displayText = '';
+  Timer? _timer;
+  @override
+  void initState() {
+    super.initState();
+    _startAnimation();
+  }
+
+  void _startAnimation() {
+    const chunkSize = 3;
+    int index = 0;
+    _timer = Timer.periodic(const Duration(milliseconds: 40), (timer) {
+      if (index >= widget.text.length) {
+        timer.cancel();
+        widget.onFinished?.call();
+      } else {
+        setState(() {
+          _displayText = widget.text.substring(
+            0,
+            (index + chunkSize).clamp(0, widget.text.length),
+          );
+        });
+        index += chunkSize;
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(_displayText, style: widget.style);
   }
 }

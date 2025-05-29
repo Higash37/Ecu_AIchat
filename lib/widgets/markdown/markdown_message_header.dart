@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../theme/app_theme.dart';
 
 class MarkdownMessageHeader extends StatelessWidget {
@@ -35,7 +34,8 @@ class MarkdownMessageHeader extends StatelessWidget {
         const SizedBox(width: 8),
         Text(
           isUserMessage ? 'あなた' : 'AI教材チャット',
-          style: GoogleFonts.notoSans(
+          style: TextStyle(
+            fontFamily: 'NotoSansJP',
             fontWeight: FontWeight.bold,
             fontSize: 14,
           ),

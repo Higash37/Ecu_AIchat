@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 class MarkdownMessageActionButtons extends StatelessWidget {
   final VoidCallback onCopy;
@@ -52,11 +51,12 @@ class MarkdownMessageActionButtons extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 14, color: Colors.grey.shade700),
+            Icon(icon, size: 14, color: Colors.grey[700]),
             const SizedBox(width: 4),
             Text(
               label,
-              style: GoogleFonts.notoSans(
+              style: TextStyle(
+                fontFamily: 'NotoSansJP',
                 fontSize: 12,
                 color: Colors.grey.shade700,
               ),
