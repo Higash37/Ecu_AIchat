@@ -17,7 +17,12 @@ app = FastAPI()
 # ✅ CORS設定（Flutter Web・モバイル・本番環境すべて許可）
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # 本番環境では適切なオリジンに制限することを推奨
+    allow_origins=[
+        "*", 
+        "https://ecu-a-ichat-dvsd.vercel.app",  # メインURL
+        "https://ecu-a-ichat-dvsd-git-main-higash37s-projects.vercel.app",  # ブランチURL
+        "https://ecu-a-ichat-dvsd-28ij9jftt-higash37s-projects.vercel.app"  # デプロイURL
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

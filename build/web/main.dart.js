@@ -45685,7 +45685,7 @@ B.m.T(a4)
 B.m.M(a4,a9)
 n.bi()
 p=16
-g=A.eu("https://aiedu-backend.onrender.com/chat",0,null)
+g=A.eu("https://ai-edu-api.fly.dev/chat",0,null)
 a5=t.N
 a6=A.a8(["Content-Type","application/json"],a5,a5)
 s=19

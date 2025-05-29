@@ -1,6 +1,7 @@
 # Render デプロイで「build/web does not exist」エラーが発生した原因と解決方法まとめ
 
 flutter build web --dart-define-from-file=env.json
+vercel deploy --prod build/web --dart-define-from-file=env.json
 
 ## 問題の概要
 
