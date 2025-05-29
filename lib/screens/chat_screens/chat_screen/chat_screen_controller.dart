@@ -213,19 +213,23 @@ class ChatScreenController extends ChangeNotifier {
           try {
             final tokenObj = jsonDecode(jsonStr);
             final token = tokenObj['token'] ?? '';
+            // --- ここでtokenが1文字ずつでも全文を連結 ---
             aiText += token;
-            // 最新のAIメッセージを更新（末尾を更新）
+            // 最新のAIメッセージを更新（全文を反映）
             final idx = messages.lastIndexWhere((m) => m.id == aiMessageId);
             if (idx != -1) {
+              // 既存のtextにtokenを追加するのではなく、aiText全文で上書き
               messages[idx] = types.TextMessage(
                 author: _bot,
                 createdAt: messages[idx].createdAt,
                 id: aiMessageId,
-                text: aiText.isEmpty ? '...' : aiText,
+                text: aiText,
               );
               notifyListeners();
             }
-          } catch (_) {}
+          } catch (e) {
+            // JSONパースエラー等は無視
+          }
         }
       }
       // --- 保存処理 ---

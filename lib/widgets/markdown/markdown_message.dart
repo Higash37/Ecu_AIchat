@@ -213,71 +213,108 @@ class _MarkdownMessageState extends State<MarkdownMessage> {
                         ),
                       ],
                       Flexible(
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color:
-                                widget.isUserMessage
-                                    ? Colors.blue.shade50
-                                    : Colors.white,
-                            borderRadius: BorderRadius.only(
-                              topLeft: const Radius.circular(16),
-                              topRight: const Radius.circular(16),
-                              bottomLeft:
-                                  widget.isUserMessage
-                                      ? const Radius.circular(16)
-                                      : const Radius.circular(4),
-                              bottomRight:
-                                  widget.isUserMessage
-                                      ? const Radius.circular(4)
-                                      : const Radius.circular(16),
-                            ),
-                            border: Border.all(
-                              color:
-                                  widget.isUserMessage
-                                      ? Colors.blue.shade200
-                                      : Colors.grey.shade300,
-                              width: 1.0,
-                            ),
-                          ),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 14,
-                            vertical: 12,
-                          ),
-                          child:
-                              (!widget.isUserMessage && !_animationCompleted)
-                                  ? AnimatedTextKit(
-                                    isRepeatingAnimation: false,
-                                    totalRepeatCount: 1,
-                                    displayFullTextOnTap: true,
-                                    stopPauseOnTap: true,
-                                    onFinished: () {
-                                      setState(() {
-                                        _animationCompleted = true;
-                                      });
-                                    },
-                                    animatedTexts: [
-                                      TypewriterAnimatedText(
-                                        _convertSuperscript(
-                                          widget.message.text,
-                                        ),
-                                        textStyle: GoogleFonts.notoSans(
-                                          fontSize: 15.0,
-                                          color: AppTheme.textPrimary,
-                                          height: 1.5,
-                                        ),
-                                        speed: const Duration(milliseconds: 30),
-                                      ),
-                                    ],
-                                  )
-                                  : MarkdownMessageContent(
-                                    text: _convertSuperscript(
-                                      widget.message.text,
+                        child:
+                            widget.isUserMessage
+                                ? Container(
+                                  decoration: BoxDecoration(
+                                    color: Colors.blue.shade50,
+                                    borderRadius: const BorderRadius.only(
+                                      topLeft: Radius.circular(16),
+                                      topRight: Radius.circular(16),
+                                      bottomLeft: Radius.circular(16),
+                                      bottomRight: Radius.circular(4),
                                     ),
-                                    isUserMessage: widget.isUserMessage,
-                                    animationCompleted: _animationCompleted,
-                                    quizzes: _quizzes,
+                                    border: Border.all(
+                                      color: Colors.blue.shade200,
+                                      width: 1.0,
+                                    ),
                                   ),
-                        ),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 14,
+                                    vertical: 12,
+                                  ),
+                                  child:
+                                      (!widget.isUserMessage &&
+                                              !_animationCompleted)
+                                          ? AnimatedTextKit(
+                                            isRepeatingAnimation: false,
+                                            totalRepeatCount: 1,
+                                            displayFullTextOnTap: true,
+                                            stopPauseOnTap: true,
+                                            onFinished: () {
+                                              setState(() {
+                                                _animationCompleted = true;
+                                              });
+                                            },
+                                            animatedTexts: [
+                                              TypewriterAnimatedText(
+                                                _convertSuperscript(
+                                                  widget.message.text,
+                                                ),
+                                                textStyle: GoogleFonts.notoSans(
+                                                  fontSize: 15.0,
+                                                  color: AppTheme.textPrimary,
+                                                  height: 1.5,
+                                                ),
+                                                speed: const Duration(
+                                                  milliseconds: 30,
+                                                ),
+                                              ),
+                                            ],
+                                          )
+                                          : MarkdownMessageContent(
+                                            text: _convertSuperscript(
+                                              widget.message.text,
+                                            ),
+                                            isUserMessage: widget.isUserMessage,
+                                            animationCompleted:
+                                                _animationCompleted,
+                                            quizzes: _quizzes,
+                                          ),
+                                )
+                                : Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 8.0,
+                                  ),
+                                  child:
+                                      (!widget.isUserMessage &&
+                                              !_animationCompleted)
+                                          ? AnimatedTextKit(
+                                            isRepeatingAnimation: false,
+                                            totalRepeatCount: 1,
+                                            displayFullTextOnTap: true,
+                                            stopPauseOnTap: true,
+                                            onFinished: () {
+                                              setState(() {
+                                                _animationCompleted = true;
+                                              });
+                                            },
+                                            animatedTexts: [
+                                              TypewriterAnimatedText(
+                                                _convertSuperscript(
+                                                  widget.message.text,
+                                                ),
+                                                textStyle: GoogleFonts.notoSans(
+                                                  fontSize: 15.0,
+                                                  color: AppTheme.textPrimary,
+                                                  height: 1.5,
+                                                ),
+                                                speed: const Duration(
+                                                  milliseconds: 30,
+                                                ),
+                                              ),
+                                            ],
+                                          )
+                                          : MarkdownMessageContent(
+                                            text: _convertSuperscript(
+                                              widget.message.text,
+                                            ),
+                                            isUserMessage: widget.isUserMessage,
+                                            animationCompleted:
+                                                _animationCompleted,
+                                            quizzes: _quizzes,
+                                          ),
+                                ),
                       ),
                       if (widget.isUserMessage) ...[
                         // ユーザーアイコン
