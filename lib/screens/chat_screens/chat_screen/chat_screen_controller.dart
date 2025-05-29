@@ -169,56 +169,24 @@ class ChatScreenController extends ChangeNotifier {
       ..addAll(ordered);
     notifyListeners();
 
-    // 1秒経ってもストリーム開始しない場合は仮テキストを維持
-    bool streamStarted = false;
-    Future.delayed(const Duration(seconds: 1), () {
-      if (!streamStarted) {
-        final idx = messages.lastIndexWhere((m) => m.id == aiMessageId);
-        if (idx != -1 &&
-            messages[idx] is types.TextMessage &&
-            (messages[idx] as types.TextMessage).text == 'AIが応答を考えています...') {
-          messages[idx] = types.TextMessage(
-            author: _bot,
-            createdAt: messages[idx].createdAt,
-            id: aiMessageId,
-            text: 'AIが応答を準備中...（ネットワーク遅延の可能性）',
-          );
-          notifyListeners();
-        }
-      }
-    });
-
     try {
-      final uri = Uri.parse('${AppConfig.apiBaseUrl}/chat/stream');
-      final request = http.Request('POST', uri);
-      request.headers['Content-Type'] = 'application/json';
-      request.body = jsonEncode({
-        "messages": [
-          {"role": "user", "content": message},
-        ],
-        "model": _selectedModel,
-      });
-      final streamedResponse = await request.send();
-      if (streamedResponse.statusCode != 200) {
-        throw Exception('API error: \\${streamedResponse.statusCode}');
+      // --- ここから非ストリームAPIで全文取得 ---
+      final uri = Uri.parse('${AppConfig.apiBaseUrl}/chat');
+      final response = await http.post(
+        uri,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          "messages": [
+            {"role": "user", "content": message},
+          ],
+          "model": _selectedModel,
+        }),
+      );
+      if (response.statusCode != 200) {
+        throw Exception('API error: \\${response.statusCode}');
       }
-      // SSEストリームを1行ずつ受信し全文を連結
-      final utf8Stream = streamedResponse.stream.transform(utf8.decoder);
-      streamStarted = true;
-      await for (final line in utf8Stream) {
-        if (line.trim().isEmpty) continue;
-        if (line.trim() == 'data: [DONE]') break;
-        if (line.startsWith('data:')) {
-          final jsonStr = line.substring(5).trim();
-          try {
-            final tokenObj = jsonDecode(jsonStr);
-            final token = tokenObj['token'] ?? '';
-            aiText += token;
-          } catch (e) {
-            // JSONパースエラー等は無視
-          }
-        }
-      }
+      final json = jsonDecode(response.body);
+      aiText = json['reply'] ?? '';
       // --- ここで全文を一度に反映 ---
       final idx = messages.lastIndexWhere((m) => m.id == aiMessageId);
       if (idx != -1) {
