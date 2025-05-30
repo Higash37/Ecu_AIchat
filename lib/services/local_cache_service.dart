@@ -77,20 +77,29 @@ class LocalCacheService {
     await box.put(loginKey, true);
   }
 
+  static Future<void> saveGuestUserInfo(String userId) async {
+    final box = await Hive.openBox(userBoxName);
+    await box.put(userIdKey, userId);
+    await box.put('is_guest', true);
+    await box.put(loginKey, false);
+  }
+
   static Future<Map<String, dynamic>?> getUserInfo() async {
     try {
       final box = await Hive.openBox(userBoxName);
       final userId = box.get(userIdKey);
       final nickname = box.get(nicknameKey);
       final isLoggedIn = box.get(loginKey, defaultValue: false);
+      final isGuest = box.get('is_guest', defaultValue: false);
       if (isLoggedIn == true) {
         return {'user_id': userId, 'nickname': nickname};
+      } else if (isGuest == true && userId != null) {
+        return {'user_id': userId, 'is_guest': true};
       }
-      // 未ログイン時はbotユーザーとして返す
+      // 未ログイン・未ゲスト時はbot
       return {'user_id': 'bot', 'nickname': 'bot'};
     } catch (e, st) {
       print('Hive user_info box error: $e\n$st');
-      // 例外時もbotユーザーとして返す
       return {'user_id': 'bot', 'nickname': 'bot'};
     }
   }
