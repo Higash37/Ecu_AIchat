@@ -34,8 +34,9 @@ class _ChatListScreenState extends State<ChatListScreen> {
     _controller = ChatListController(projectId: widget.projectId);
     _controller.addListener(_onControllerChanged);
     // プリフェッチがあれば即時反映
-    if (widget.prefetchedChats != null && widget.prefetchedChats!.isNotEmpty) {
-      _controller.chats = widget.prefetchedChats!;
+    if (widget.prefetchedChats != null &&
+        (widget.prefetchedChats?.isNotEmpty ?? false)) {
+      _controller.chats = widget.prefetchedChats ?? [];
       _controller.isLoading = false;
     } else {
       _loadChats();

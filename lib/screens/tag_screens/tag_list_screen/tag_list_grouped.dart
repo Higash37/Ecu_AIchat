@@ -24,7 +24,7 @@ class TagListGrouped extends StatelessWidget {
         orElse: () => TagType.keyword,
       );
       groupedTags[type] = groupedTags[type] ?? [];
-      groupedTags[type]!.add(tag);
+      (groupedTags[type] ?? <Tag>[]).add(tag);
     }
     return ListView(
       padding: const EdgeInsets.all(16),
@@ -60,10 +60,15 @@ class TagListGrouped extends StatelessWidget {
                               tagTypeColors[type] != null
                                   ? tagTypeColors[type]!.withValues(
                                     alpha: 0.6,
-                                    red: tagTypeColors[type]!.red.toDouble(),
+                                    red:
+                                        tagTypeColors[type]?.red.toDouble() ??
+                                        0,
                                     green:
-                                        tagTypeColors[type]!.green.toDouble(),
-                                    blue: tagTypeColors[type]!.blue.toDouble(),
+                                        tagTypeColors[type]?.green.toDouble() ??
+                                        0,
+                                    blue:
+                                        tagTypeColors[type]?.blue.toDouble() ??
+                                        0,
                                   )
                                   : Colors.grey,
                           fontSize: 14,

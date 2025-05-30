@@ -62,9 +62,11 @@ class _MarkdownMessageState extends State<MarkdownMessage> {
     }
     */
     _currentEmotion =
-        widget.message.metadata != null &&
-                widget.message.metadata!['emotion'] != null
-            ? widget.message.metadata!['emotion'] as String
+        (widget.message.metadata != null &&
+                widget.message.metadata is Map &&
+                (widget.message.metadata as Map).containsKey('emotion') &&
+                (widget.message.metadata as Map)['emotion'] != null)
+            ? (widget.message.metadata as Map)['emotion'] as String
             : null;
   }
 
@@ -72,9 +74,11 @@ class _MarkdownMessageState extends State<MarkdownMessage> {
   void didUpdateWidget(covariant MarkdownMessage oldWidget) {
     super.didUpdateWidget(oldWidget);
     final newEmotion =
-        widget.message.metadata != null &&
-                widget.message.metadata!['emotion'] != null
-            ? widget.message.metadata!['emotion'] as String
+        (widget.message.metadata != null &&
+                widget.message.metadata is Map &&
+                (widget.message.metadata as Map).containsKey('emotion') &&
+                (widget.message.metadata as Map)['emotion'] != null)
+            ? (widget.message.metadata as Map)['emotion'] as String
             : null;
     if (newEmotion != _currentEmotion) {
       setState(() {
@@ -161,9 +165,13 @@ class _MarkdownMessageState extends State<MarkdownMessage> {
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             gradient:
-                                widget.message.metadata != null &&
-                                        widget.message.metadata!['creative'] ==
-                                            true
+                                (widget.message.metadata != null &&
+                                        widget.message.metadata is Map &&
+                                        (widget.message.metadata as Map)
+                                            .containsKey('creative') &&
+                                        (widget.message.metadata
+                                                as Map)['creative'] ==
+                                            true)
                                     ? LinearGradient(
                                       colors: [
                                         Colors.amber,
@@ -178,9 +186,13 @@ class _MarkdownMessageState extends State<MarkdownMessage> {
                                       ],
                                     ),
                             boxShadow:
-                                widget.message.metadata != null &&
-                                        widget.message.metadata!['creative'] ==
-                                            true
+                                (widget.message.metadata != null &&
+                                        widget.message.metadata is Map &&
+                                        (widget.message.metadata as Map)
+                                            .containsKey('creative') &&
+                                        (widget.message.metadata
+                                                as Map)['creative'] ==
+                                            true)
                                     ? [
                                       BoxShadow(
                                         color: Colors.amber.withOpacity(0.5),
@@ -194,11 +206,13 @@ class _MarkdownMessageState extends State<MarkdownMessage> {
                             child: AnimatedSwitcher(
                               duration: const Duration(milliseconds: 400),
                               child:
-                                  widget.message.metadata != null &&
-                                          widget
-                                                  .message
-                                                  .metadata!['creative'] ==
-                                              true
+                                  (widget.message.metadata != null &&
+                                          widget.message.metadata is Map &&
+                                          (widget.message.metadata as Map)
+                                              .containsKey('creative') &&
+                                          (widget.message.metadata
+                                                  as Map)['creative'] ==
+                                              true)
                                       ? Icon(
                                         Icons.auto_awesome,
                                         color: Colors.white,
@@ -391,20 +405,32 @@ class _MarkdownMessageState extends State<MarkdownMessage> {
                   // --- reasoning（AIの思考経路）をタップで展開 ---
                   if (!widget.isUserMessage &&
                       widget.message.metadata != null &&
-                      widget.message.metadata!['creative'] == true &&
-                      widget.message.metadata!['reasoning'] != null)
+                      widget.message.metadata is Map &&
+                      (widget.message.metadata as Map).containsKey(
+                        'creative',
+                      ) &&
+                      (widget.message.metadata as Map)['creative'] == true &&
+                      (widget.message.metadata as Map).containsKey(
+                        'reasoning',
+                      ) &&
+                      (widget.message.metadata as Map)['reasoning'] != null)
                     Padding(
                       padding: const EdgeInsets.only(bottom: 8.0),
                       child: ReasoningExpandable(
                         reasoning:
-                            widget.message.metadata!['reasoning'] as String,
+                            (widget.message.metadata as Map)['reasoning']
+                                as String,
                       ),
                     ),
 
                   // --- creative時のアニメ強化 ---
                   if (!widget.isUserMessage &&
                       widget.message.metadata != null &&
-                      widget.message.metadata!['creative'] == true)
+                      widget.message.metadata is Map &&
+                      (widget.message.metadata as Map).containsKey(
+                        'creative',
+                      ) &&
+                      (widget.message.metadata as Map)['creative'] == true)
                     Padding(
                       padding: const EdgeInsets.only(bottom: 8.0),
                       child: AnimatedOpacity(
@@ -453,7 +479,12 @@ class _MarkdownMessageState extends State<MarkdownMessage> {
                   // --- 知識グラフ可視化UI ---
                   if (!widget.isUserMessage &&
                       widget.message.metadata != null &&
-                      widget.message.metadata!['knowledge_graph'] != null)
+                      widget.message.metadata is Map &&
+                      (widget.message.metadata as Map).containsKey(
+                        'knowledge_graph',
+                      ) &&
+                      (widget.message.metadata as Map)['knowledge_graph'] !=
+                          null)
                     Padding(
                       padding: const EdgeInsets.only(bottom: 8.0),
                       child: KnowledgeGraphMiniView(

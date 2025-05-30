@@ -241,13 +241,14 @@ class ChatDetailController extends ChangeNotifier {
     if (chat == null) return;
     await _chatService.updateChatTitle(chatId, title);
     chat = Chat(
-      id: chat!.id,
-      projectId: chat!.projectId,
+      id: chat?.id ?? '',
+      projectId: chat?.projectId,
       title: title,
-      createdAt: chat!.createdAt,
-      updatedAt: chat!.updatedAt,
-      lastMessage: chat!.lastMessage,
-      messageCount: chat!.messageCount,
+      createdAt: chat?.createdAt ?? DateTime.now(),
+      updatedAt: chat?.updatedAt,
+      lastMessage: chat?.lastMessage,
+      messageCount: chat?.messageCount,
+      userId: chat?.userId,
     );
     notifyListeners();
   }

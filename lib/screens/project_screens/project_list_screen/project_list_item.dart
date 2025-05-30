@@ -59,7 +59,7 @@ class ProjectListItem extends StatelessWidget {
                   const SizedBox(width: 4),
                   Text(
                     '作成日: '
-                    '${project.createdAt != null ? '${project.createdAt!.year}/${project.createdAt!.month}/${project.createdAt!.day}' : '不明'}',
+                    '${project.createdAt != null ? '${project.createdAt?.year}/${project.createdAt?.month}/${project.createdAt?.day}' : '不明'}',
                     style: TextStyle(fontSize: 12, color: AppTheme.textLight),
                   ),
                   const SizedBox(width: 16),

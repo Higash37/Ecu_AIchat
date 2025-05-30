@@ -21,14 +21,13 @@ class MessageList extends StatelessWidget {
     return Stack(
       children: [
         // --- メッセージリスト ---
-        if (controller != null && controller!.messages.isEmpty && isLoading)
+        if (controller?.messages.isEmpty == true && isLoading)
           _buildSkeletonBubbles()
         else
           _buildMessageList(),
 
         // --- AI応答ローディング ---
-        if (controller != null && controller!.isLoading)
-          _buildLoadingIndicator(context),
+        if (controller?.isLoading == true) _buildLoadingIndicator(context),
 
         // --- 履歴ロード中の超軽量インジケータ（画面右下） ---
         if (isLoading) _buildHistoryLoadingIndicator(),
@@ -82,19 +81,20 @@ class MessageList extends StatelessWidget {
         padding: const EdgeInsets.only(top: 16, bottom: 16),
         itemCount: controller?.messages.length ?? 0,
         itemBuilder: (context, index) {
-          if (controller == null || controller!.messages.isEmpty) {
+          if (controller?.messages.isEmpty != false) {
             return const SizedBox.shrink();
           }
-          final messageIndex = controller!.messages.length - 1 - index;
-          if (messageIndex < 0 || messageIndex >= controller!.messages.length) {
+          final messageIndex = (controller?.messages.length ?? 0) - 1 - index;
+          if (messageIndex < 0 ||
+              messageIndex >= (controller?.messages.length ?? 0)) {
             return const SizedBox.shrink();
           }
           final message =
-              controller!.messages[messageIndex] as types.TextMessage;
-          final isUserMessage = message.author.id == controller!.user.id;
+              controller?.messages[messageIndex] as types.TextMessage;
+          final isUserMessage = message.author.id == controller?.user.id;
           // AI応答ストリーミング中の最新AIメッセージにはアニメーションカーソルを表示
           final isLatestAI =
-              !isUserMessage && index == 0 && controller!.isLoading;
+              !isUserMessage && index == 0 && (controller?.isLoading == true);
 
           return Stack(
             children: [

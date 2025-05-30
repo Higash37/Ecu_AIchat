@@ -55,7 +55,7 @@ class ChatListItem extends StatelessWidget {
                     constraints: const BoxConstraints(),
                   ),
                   const SizedBox(width: 8),
-                  if (chat.messageCount != null && chat.messageCount! > 0)
+                  if (chat.messageCount != null && (chat.messageCount ?? 0) > 0)
                     Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 8,
@@ -77,9 +77,10 @@ class ChatListItem extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 8),
-              if (chat.lastMessage != null && chat.lastMessage!.isNotEmpty)
+              if (chat.lastMessage != null &&
+                  (chat.lastMessage?.isNotEmpty ?? false))
                 Text(
-                  chat.lastMessage!,
+                  chat.lastMessage ?? '',
                   style: TextStyle(color: Colors.grey.shade700, fontSize: 14),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
