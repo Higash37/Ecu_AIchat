@@ -5,12 +5,20 @@ class ChatService {
   final supabase = Supabase.instance.client;
   // すべてのチャット一覧の取得（ユーザーごと）
   Future<List<Chat>> fetchAllChats(String userId) async {
+    final uuidRegExp = RegExp(r'^[0-9a-fA-F\-]{36}');
+    if (userId.isEmpty || !uuidRegExp.hasMatch(userId)) {
+      print('[fetchAllChats] userIdがUUIDでない、または空です。user_id条件を外して取得します');
+      final response = await supabase
+          .from('chats')
+          .select()
+          .order('updated_at', ascending: false);
+      return (response as List).map((e) => Chat.fromMap(e)).toList();
+    }
     final response = await supabase
         .from('chats')
         .select()
         .eq('user_id', userId)
         .order('updated_at', ascending: false);
-
     return (response as List).map((e) => Chat.fromMap(e)).toList();
   }
 
@@ -19,13 +27,22 @@ class ChatService {
     String projectId,
     String userId,
   ) async {
+    final uuidRegExp = RegExp(r'^[0-9a-fA-F\-]{36}');
+    if (userId.isEmpty || !uuidRegExp.hasMatch(userId)) {
+      print('[fetchChatsByProjectId] userIdがUUIDでない、または空です。user_id条件を外して取得します');
+      final response = await supabase
+          .from('chats')
+          .select()
+          .eq('project_id', projectId)
+          .order('updated_at', ascending: false);
+      return (response as List).map((e) => Chat.fromMap(e)).toList();
+    }
     final response = await supabase
         .from('chats')
         .select()
         .eq('project_id', projectId)
         .eq('user_id', userId)
         .order('updated_at', ascending: false);
-
     return (response as List).map((e) => Chat.fromMap(e)).toList();
   }
 
@@ -39,6 +56,13 @@ class ChatService {
 
   // チャットの取得（ID指定・ユーザーごと）
   Future<Chat> fetchChatById(String id, String userId) async {
+    final uuidRegExp = RegExp(r'^[0-9a-fA-F\-]{36}');
+    if (userId.isEmpty || !uuidRegExp.hasMatch(userId)) {
+      print('[fetchChatById] userIdがUUIDでない、または空です。user_id条件を外して取得します');
+      final response =
+          await supabase.from('chats').select().eq('id', id).single();
+      return Chat.fromMap(response);
+    }
     final response =
         await supabase
             .from('chats')
@@ -46,7 +70,6 @@ class ChatService {
             .eq('id', id)
             .eq('user_id', userId)
             .single();
-
     return Chat.fromMap(response);
   }
 
