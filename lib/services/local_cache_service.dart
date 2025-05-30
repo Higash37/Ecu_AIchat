@@ -67,14 +67,21 @@ class LocalCacheService {
   }
 
   static Future<Map<String, dynamic>?> getUserInfo() async {
-    final box = await Hive.openBox(userBoxName);
-    final userId = box.get(userIdKey);
-    final nickname = box.get(nicknameKey);
-    final isLoggedIn = box.get(loginKey, defaultValue: false);
-    if (userId != null && nickname != null && isLoggedIn == true) {
-      return {'user_id': userId, 'nickname': nickname};
+    try {
+      final box = await Hive.openBox(userBoxName);
+      final userId = box.get(userIdKey);
+      final nickname = box.get(nicknameKey);
+      final isLoggedIn = box.get(loginKey, defaultValue: false);
+      if (isLoggedIn == true) {
+        return {'user_id': userId, 'nickname': nickname};
+      }
+      // 未ログイン時はbotユーザーとして返す
+      return {'user_id': 'bot', 'nickname': 'bot'};
+    } catch (e, st) {
+      print('Hive user_info box error: $e\n$st');
+      // 例外時もbotユーザーとして返す
+      return {'user_id': 'bot', 'nickname': 'bot'};
     }
-    return null;
   }
 
   static Future<void> clearUserInfo() async {

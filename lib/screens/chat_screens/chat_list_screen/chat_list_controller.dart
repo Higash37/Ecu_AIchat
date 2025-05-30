@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:uuid/uuid.dart';
 import '../../../models/chat.dart';
 import '../../../services/chat_service.dart';
 import '../../../services/local_cache_service.dart';
@@ -74,23 +73,9 @@ class ChatListController extends ChangeNotifier {
 
   Future<Chat?> createChat(BuildContext context, String title) async {
     final user = await LocalCacheService.getUserInfo();
-    final userId = user?['user_id'];
-    if (userId == null) {
-      // 未ログイン時はローカルキャッシュのみ保存
-      final newChat = Chat(
-        id: const Uuid().v4(),
-        projectId: projectId ?? '',
-        title: title,
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-        lastMessage: '',
-        messageCount: 0,
-        userId: null,
-      );
-      await LocalCacheService.cacheChats([newChat]);
-      await loadChats(context);
-      return newChat;
-    }
+    String userId = user?['user_id'] ?? 'bot';
+    // nicknameも今後必要なら取得・利用可能
+    // final nickname = user?['nickname'] ?? 'bot';
     try {
       final newChat = Chat(
         id: '', // サーバー側でID生成される場合は空文字
