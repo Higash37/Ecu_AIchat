@@ -32,8 +32,13 @@ class LocalCacheService {
   }
 
   static List<Chat> getCachedChats() {
-    final box = Hive.box<Chat>(chatBoxName);
-    return box.values.toList();
+    try {
+      final box = Hive.box<Chat>(chatBoxName);
+      return box.values.toList();
+    } catch (e) {
+      print('Hive cached_chats box error: $e');
+      return [];
+    }
   }
 
   // チャットごとのメッセージキャッシュ
@@ -49,8 +54,14 @@ class LocalCacheService {
   }
 
   static Future<List<Message>> getCachedMessages(String chatId) async {
-    final box = await Hive.openBox<Message>(messageBoxPrefix + chatId);
-    return box.values.toList();
+    try {
+      final box = await Hive.openBox<Message>(messageBoxPrefix + chatId);
+      return box.values.toList();
+    } catch (e) {
+      print('Hive message box error: $e');
+      // 例外時は空リスト返却
+      return [];
+    }
   }
 
   // --- ユーザー情報の永続化 ---

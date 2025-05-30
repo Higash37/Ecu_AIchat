@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'widgets/common/splash_screen.dart';
 import 'screens/chat_screens/chat_screen/chat_screen.dart';
 import 'services/local_cache_service.dart';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -11,39 +10,49 @@ class SplashWrapper extends StatelessWidget {
   const SplashWrapper({super.key});
 
   Future<String> initializeApp() async {
-    await Supabase.initialize(
-      url: AppConfig.supabaseUrl,
-      anonKey: AppConfig.supabaseAnonKey,
-    );
-    await LocalCacheService.init();
-    await Hive.initFlutter();
-    final box = await Hive.openBox('guest_session');
-    String? guestSessionId = box.get('guest_session_id');
-    if (guestSessionId == null) {
+    String? guestSessionId;
+    try {
+      // Supabase等の初期化は失敗しても致命的にしない
+      try {
+        await Supabase.initialize(
+          url: AppConfig.supabaseUrl,
+          anonKey: AppConfig.supabaseAnonKey,
+        );
+      } catch (e) {
+        print('Supabase初期化失敗: $e');
+      }
+      try {
+        await LocalCacheService.init();
+      } catch (e) {
+        print('LocalCacheService初期化失敗: $e');
+      }
+      try {
+        await Hive.initFlutter();
+      } catch (e) {
+        print('Hive初期化失敗: $e');
+      }
+      try {
+        final box = await Hive.openBox('guest_session');
+        guestSessionId = box.get('guest_session_id');
+        if (guestSessionId == null) {
+          guestSessionId = const Uuid().v4();
+          await box.put('guest_session_id', guestSessionId);
+        }
+      } catch (e) {
+        print('ゲストID生成用box初期化失敗: $e');
+        // boxが開けない場合もUUIDだけ生成
+        guestSessionId = const Uuid().v4();
+      }
+    } catch (e) {
+      print('initializeApp全体で例外: $e');
       guestSessionId = const Uuid().v4();
-      await box.put('guest_session_id', guestSessionId);
     }
     return guestSessionId;
   }
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<String>(
-      future: initializeApp(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.done) {
-          if (snapshot.hasData) {
-            return ChatScreen(chatId: snapshot.data ?? '', projectId: '');
-          } else {
-            // エラーハンドリング: 有効なIDが取得できなかった場合は新しいIDを生成
-            final fallbackId = const Uuid().v4();
-            print('警告: ゲストセッションIDが取得できませんでした。代替ID生成: $fallbackId');
-            return ChatScreen(chatId: fallbackId, projectId: '');
-          }
-        } else {
-          return const SplashScreen();
-        }
-      },
-    );
+    // まずUIを即時表示し、裏で初期化・接続を進める
+    return ChatScreen(chatId: '', projectId: '');
   }
 }
