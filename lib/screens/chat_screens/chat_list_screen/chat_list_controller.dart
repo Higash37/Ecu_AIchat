@@ -27,9 +27,9 @@ class ChatListController extends ChangeNotifier {
         loadedChats = LocalCacheService.getCachedChats();
         projectTitle = projectId != null ? 'プロジェクト内チャット' : 'すべてのチャット';
       } else {
-        if (projectId != null) {
+        if ((projectId ?? '').isNotEmpty) {
           loadedChats = await _chatService.fetchChatsByProject(
-            projectId!,
+            projectId ?? '',
             userId,
           );
           projectTitle = 'プロジェクト内チャット';
@@ -79,7 +79,7 @@ class ChatListController extends ChangeNotifier {
       // 未ログイン時はローカルキャッシュのみ保存
       final newChat = Chat(
         id: const Uuid().v4(),
-        projectId: projectId!,
+        projectId: projectId ?? '',
         title: title,
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
@@ -94,7 +94,7 @@ class ChatListController extends ChangeNotifier {
     try {
       final newChat = Chat(
         id: '', // サーバー側でID生成される場合は空文字
-        projectId: projectId!,
+        projectId: projectId ?? '',
         title: title,
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),

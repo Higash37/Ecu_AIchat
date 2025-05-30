@@ -33,19 +33,35 @@ class Chat {
   });
 
   factory Chat.fromMap(Map<String, dynamic> map) {
+    final createdAtRaw = map['created_at'];
+    DateTime createdAtSafe;
+    if (createdAtRaw == null ||
+        (createdAtRaw is String && createdAtRaw.isEmpty)) {
+      createdAtSafe = DateTime.now();
+    } else if (createdAtRaw is DateTime) {
+      createdAtSafe = createdAtRaw;
+    } else {
+      try {
+        createdAtSafe = DateTime.parse(createdAtRaw.toString());
+      } catch (_) {
+        createdAtSafe = DateTime.now();
+      }
+    }
     return Chat(
-      id: map['id'] as String,
-      projectId: map['project_id'],
-      title: map['title'] ?? '',
-      createdAt: DateTime.parse(map['created_at']),
+      id: map['id']?.toString() ?? '',
+      projectId: map['project_id']?.toString(),
+      title: map['title']?.toString() ?? '',
+      createdAt: createdAtSafe,
       updatedAt:
-          map['updated_at'] != null ? DateTime.parse(map['updated_at']) : null,
-      lastMessage: map['last_message'],
+          map['updated_at'] != null && map['updated_at'].toString().isNotEmpty
+              ? DateTime.tryParse(map['updated_at'].toString())
+              : null,
+      lastMessage: map['last_message']?.toString(),
       messageCount:
           map['message_count'] != null
-              ? (map['message_count'] as num).toInt()
+              ? (map['message_count'] as num?)?.toInt()
               : null,
-      userId: map['user_id'],
+      userId: map['user_id']?.toString(),
     );
   }
 
@@ -55,11 +71,12 @@ class Chat {
       'title': title,
       'created_at': createdAt.toIso8601String(),
     };
-    if (projectId != null && projectId!.isNotEmpty) {
+    // projectIdのnull安全化
+    if ((projectId ?? '').isNotEmpty) {
       result['project_id'] = projectId;
     }
     if (updatedAt != null) {
-      result['updated_at'] = updatedAt!.toIso8601String();
+      result['updated_at'] = updatedAt?.toIso8601String();
     }
     if (lastMessage != null) {
       result['last_message'] = lastMessage;

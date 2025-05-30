@@ -31,7 +31,7 @@ class ProjectDetailController extends ChangeNotifier {
       final user = await LocalCacheService.getUserInfo();
       final userId = user?['user_id'] ?? '';
       final result = await chatService.fetchChatsByProjectId(
-        project.id!,
+        project.id ?? '',
         userId,
       );
       chats = result;
