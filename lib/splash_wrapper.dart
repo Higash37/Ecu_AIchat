@@ -16,8 +16,11 @@ class SplashWrapper extends StatelessWidget {
         url: AppConfig.supabaseUrl,
         anonKey: AppConfig.supabaseAnonKey,
       );
+      
+      // Hiveの初期化は1回だけ行う
       await LocalCacheService.init();
-      await Hive.initFlutter();
+      
+      // guest_sessionのBoxを開く
       final box = await Hive.openBox('guest_session');
       guestSessionId = box.get('guest_session_id');
       if (guestSessionId == null) {
@@ -41,10 +44,8 @@ class SplashWrapper extends StatelessWidget {
       future: initializeApp(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.done) {
-          final chatId =
-              snapshot.data?.isNotEmpty == true
-                  ? snapshot.data!
-                  : const Uuid().v4();
+          // nullチェックを厳密に行う
+          final chatId = snapshot.data ?? const Uuid().v4();
           return ChatScreen(chatId: chatId, projectId: '');
         } else {
           return const Center(child: CircularProgressIndicator());

@@ -73,8 +73,31 @@ class ChatService {
     return Chat.fromMap(response);
   }
 
+  // チャットの存在確認
+  Future<bool> checkIfChatExists(String chatId, String userId) async {
+    try {
+      final response = await supabase
+          .from('chats')
+          .select('id')
+          .eq('id', chatId)
+          .eq('user_id', userId)
+          .maybeSingle();
+      return response != null;
+    } catch (e) {
+      print('チャット存在確認エラー: $e');
+      return false;
+    }
+  }
+
   // 新しいチャットの作成（ユーザーごと）
   Future<Chat> createChat(Chat chat, String userId) async {
+    // 既存のチャットをチェック
+    final exists = await checkIfChatExists(chat.id, userId);
+    if (exists) {
+      print('チャットが既に存在します: ${chat.id}');
+      return await fetchChatById(chat.id, userId);
+    }
+
     final chatMap = chat.toMap();
     chatMap['user_id'] = userId;
     final response =

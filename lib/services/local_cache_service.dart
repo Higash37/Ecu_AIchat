@@ -10,16 +10,26 @@ class LocalCacheService {
   static const String messageBoxPrefix = 'cached_messages_';
 
   static Future<void> init() async {
-    if (kIsWeb) {
-      await Hive.initFlutter();
-    } else {
-      final dir = await getApplicationDocumentsDirectory();
-      Hive.init(dir.path);
+    // Hiveの初期化は1回だけ行う
+    if (!Hive.isBoxOpen(chatBoxName)) {
+      if (kIsWeb) {
+        await Hive.initFlutter();
+      } else {
+        final dir = await getApplicationDocumentsDirectory();
+        Hive.init(dir.path);
+      }
+      
+      // アダプターの登録
+      if (!Hive.isAdapterRegistered(0)) {
+        Hive.registerAdapter(ChatAdapter());
+      }
+      if (!Hive.isAdapterRegistered(1)) {
+        Hive.registerAdapter(MessageAdapter());
+      }
+      
+      // Boxの初期化
+      await Hive.openBox<Chat>(chatBoxName);
     }
-    Hive.registerAdapter(ChatAdapter());
-    Hive.registerAdapter(MessageAdapter());
-    await Hive.openBox<Chat>(chatBoxName);
-    // メッセージBoxは動的に開く
   }
 
   // チャット一覧キャッシュ
