@@ -108,4 +108,9 @@ class LocalCacheService {
     final box = await Hive.openBox(userBoxName);
     await box.clear();
   }
+
+  static Future<void> setUserInfo(Map<String, dynamic> info) async {
+    final box = await Hive.openBox(userBoxName);
+    info.forEach((key, value) => box.put(key, value));
+  }
 }
