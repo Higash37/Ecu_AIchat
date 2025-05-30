@@ -24,9 +24,17 @@ class SplashWrapper extends StatelessWidget {
         guestSessionId = const Uuid().v4();
         await box.put('guest_session_id', guestSessionId);
       }
+      // guestSessionId を userInfo として保存
+      final userBox = await Hive.openBox('user_info');
+      await userBox.put('user_id', guestSessionId);
+      await userBox.put('is_guest', true);
     } catch (e) {
       print('初期化失敗: $e');
       guestSessionId = const Uuid().v4();
+      // エラー時も最低限 userInfo を保存
+      final userBox = await Hive.openBox('user_info');
+      await userBox.put('user_id', guestSessionId);
+      await userBox.put('is_guest', true);
     }
     return guestSessionId;
   }
