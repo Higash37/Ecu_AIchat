@@ -19,29 +19,22 @@ class ChatScreen extends StatefulWidget {
 
 class _ChatScreenState extends State<ChatScreen> {
   ChatScreenController? _controller;
-  late Future<void> _initFuture;
+  Future<void>? _initFuture;
 
   @override
   void initState() {
     super.initState();
-    if (widget.chatId.isNotEmpty) {
-      _controller = ChatScreenController(
-        chatId: widget.chatId,
-        projectId: widget.projectId,
-      );
-      _initFuture = _controller!.init();
-      _controller!.addListener(_onControllerChanged);
-    } else {
-      // chatIdが空の場合のフォールバック処理
+    final idToUse =
+        widget.chatId.isNotEmpty ? widget.chatId : const Uuid().v4();
+    if (widget.chatId.isEmpty) {
       print('警告: chatIdが空です。新しいIDを生成します。');
-      final fallbackId = const Uuid().v4();
-      _controller = ChatScreenController(
-        chatId: fallbackId,
-        projectId: widget.projectId,
-      );
-      _initFuture = _controller!.init();
-      _controller!.addListener(_onControllerChanged);
     }
+    _controller = ChatScreenController(
+      chatId: idToUse,
+      projectId: widget.projectId,
+    );
+    _initFuture = _controller!.init();
+    _controller!.addListener(_onControllerChanged);
   }
 
   @override
@@ -72,37 +65,42 @@ class _ChatScreenState extends State<ChatScreen> {
           },
         ),
       ],
-      body: FutureBuilder<void>(
-        future: _initFuture,
-        builder: (context, snapshot) {
-          // --- 極限まで高速表示: 履歴ロード中もUI即表示・入力即可能 ---
-          final isLoading = snapshot.connectionState == ConnectionState.waiting;
+      body:
+          _initFuture == null
+              ? const Center(child: Text('初期化中にエラーが発生しました'))
+              : FutureBuilder<void>(
+                future: _initFuture,
+                builder: (context, snapshot) {
+                  final isLoading =
+                      snapshot.connectionState == ConnectionState.waiting;
 
-          // コントローラーがnullの場合にフォールバック
-          if (_controller == null) {
-            return const Center(child: Text('エラー: チャットコントローラーの初期化に失敗しました。'));
-          }
+                  // コントローラーがnullの場合にフォールバック
+                  if (_controller == null) {
+                    return const Center(
+                      child: Text('エラー: チャットコントローラーの初期化に失敗しました。'),
+                    );
+                  }
 
-          return Column(
-            children: [
-              Expanded(
-                child: Container(
-                  color: AppTheme.backgroundColor,
-                  child: MessageList(
-                    controller: _controller,
-                    isLoading: isLoading,
-                  ),
-                ),
+                  return Column(
+                    children: [
+                      Expanded(
+                        child: Container(
+                          color: AppTheme.backgroundColor,
+                          child: MessageList(
+                            controller: _controller,
+                            isLoading: isLoading,
+                          ),
+                        ),
+                      ),
+                      // --- 入力欄は常に即表示・即入力可能 ---
+                      ChatInputField(
+                        onSendPressed:
+                            (msg) => _controller?.onSendPressed(context, msg),
+                      ),
+                    ],
+                  );
+                },
               ),
-              // --- 入力欄は常に即表示・即入力可能 ---
-              ChatInputField(
-                onSendPressed:
-                    (msg) => _controller?.onSendPressed(context, msg),
-              ),
-            ],
-          );
-        },
-      ),
     );
   }
 }

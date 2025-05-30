@@ -26,23 +26,28 @@ class ProjectDetailScreen extends StatefulWidget {
 }
 
 class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
-  late final ProjectDetailController _controller;
+  ProjectDetailController? _controller;
 
   @override
   void initState() {
     super.initState();
-    _controller = ProjectDetailController(
-      project: widget.project,
-      chatService: ChatService(),
-      projectService: ProjectService(),
-    );
-    _controller.addListener(_onControllerChanged);
-    _controller.loadChats();
+    try {
+      _controller = ProjectDetailController(
+        project: widget.project,
+        chatService: ChatService(),
+        projectService: ProjectService(),
+      );
+      _controller!.addListener(_onControllerChanged);
+      _controller!.loadChats();
+    } catch (e) {
+      debugPrint('初期化エラー: $e');
+      _controller = null;
+    }
   }
 
   @override
   void dispose() {
-    _controller.removeListener(_onControllerChanged);
+    _controller?.removeListener(_onControllerChanged);
     super.dispose();
   }
 
@@ -52,6 +57,13 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (_controller == null) {
+      return const AppScaffold(
+        title: 'プロジェクト詳細',
+        currentNavIndex: 0,
+        body: Center(child: Text('コントローラー初期化エラー')),
+      );
+    }
     return AppScaffold(
       title: widget.project.name,
       currentNavIndex: 0,
@@ -62,7 +74,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
               () => showEditProjectDialog(
                 context: context,
                 project: widget.project,
-                projectService: _controller.projectService,
+                projectService: _controller!.projectService,
                 onUpdated: () => setState(() {}),
               ),
         ),
@@ -76,11 +88,15 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
                       context: context,
                       onDelete: () async {
                         try {
-                          if (widget.project.id == null) {
-                            throw Exception('プロジェクトIDが未設定です');
+                          if (widget.project.id == null ||
+                              widget.project.id!.isEmpty) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('プロジェクトIDが無効です')),
+                            );
+                            return;
                           }
-                          await _controller.projectService.deleteProject(
-                            widget.project.id ?? '',
+                          await _controller!.projectService.deleteProject(
+                            widget.project.id!,
                           );
                           if (mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
@@ -102,13 +118,19 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
       ],
       floatingActionButton: FloatingActionButton(
         onPressed: () {
+          if (widget.project.id == null || widget.project.id!.isEmpty) {
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(const SnackBar(content: Text('プロジェクトIDが無効です')));
+            return;
+          }
           Navigator.push(
             context,
             MaterialPageRoute(
               builder:
                   (_) => ChatScreen(
                     chatId: const Uuid().v4(),
-                    projectId: widget.project.id ?? '',
+                    projectId: widget.project.id!,
                   ),
             ),
           );
@@ -121,29 +143,39 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
         children: [
           ProjectDetailHeader(
             project: widget.project,
-            chatCount: _controller.chats.length,
+            chatCount: _controller!.chats.length,
             onCreateChat: () {
+              if (widget.project.id == null || widget.project.id!.isEmpty) {
+                ScaffoldMessenger.of(
+                  context,
+                ).showSnackBar(const SnackBar(content: Text('プロジェクトIDが無効です')));
+                return;
+              }
               Navigator.push(
                 context,
                 MaterialPageRoute(
                   builder:
                       (_) => ChatScreen(
                         chatId: const Uuid().v4(),
-                        projectId: widget.project.id ?? '',
+                        projectId: widget.project.id!,
                       ),
                 ),
               );
             },
             onTagManage: () {
-              if (widget.project.id != null) {
+              if (widget.project.id != null && widget.project.id!.isNotEmpty) {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
                     builder:
                         (context) =>
-                            TagListScreen(projectId: widget.project.id ?? ''),
+                            TagListScreen(projectId: widget.project.id!),
                   ),
                 );
+              } else {
+                ScaffoldMessenger.of(
+                  context,
+                ).showSnackBar(const SnackBar(content: Text('プロジェクトIDが無効です')));
               }
             },
             onPdfGenerate: () {
@@ -168,43 +200,50 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
                 TextButton.icon(
                   icon: const Icon(Icons.refresh, size: 16),
                   label: const Text('更新'),
-                  onPressed: _controller.loadChats,
+                  onPressed: _controller!.loadChats,
                 ),
               ],
             ),
           ),
           Expanded(
             child:
-                _controller.isLoading
+                _controller!.isLoading
                     ? const Center(child: CircularProgressIndicator())
-                    : _controller.errorMessage != null
+                    : _controller!.errorMessage != null
                     ? ErrorStateWidget(
-                      message: _controller.errorMessage ?? 'エラーが発生しました',
-                      onRetry: _controller.loadChats,
+                      message: _controller!.errorMessage ?? 'エラーが発生しました',
+                      onRetry: _controller!.loadChats,
                     )
-                    : _controller.chats.isEmpty
+                    : _controller!.chats.isEmpty
                     ? ProjectDetailEmpty(
                       onCreateChat: () {
+                        if (widget.project.id == null ||
+                            widget.project.id!.isEmpty) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('プロジェクトIDが無効です')),
+                          );
+                          return;
+                        }
                         Navigator.push(
                           context,
                           MaterialPageRoute(
                             builder:
                                 (_) => ChatScreen(
                                   chatId: const Uuid().v4(),
-                                  projectId: widget.project.id ?? '',
+                                  projectId: widget.project.id!,
                                 ),
                           ),
                         );
                       },
                     )
                     : ProjectDetailChatList(
-                      chats: _controller.chats,
+                      chats: _controller!.chats,
                       onDeleteChat:
                           (chat) => showConfirmDeleteChat(
                             context: context,
                             chat: chat,
                             onDelete:
-                                () => _controller.deleteChat(chat.id, context),
+                                () => _controller!.deleteChat(chat.id, context),
                           ),
                     ),
           ),

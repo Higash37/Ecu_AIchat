@@ -29,18 +29,18 @@ class ProjectListScreen extends StatefulWidget {
 }
 
 class _ProjectListScreenState extends State<ProjectListScreen> {
-  late ProjectListController _controller;
+  ProjectListController? _controller;
 
   @override
   void initState() {
     super.initState();
     _controller = ProjectListController();
-    _controller.loadProjects(prefetched: widget.prefetchedProjects);
+    _controller!.loadProjects(prefetched: widget.prefetchedProjects);
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    _controller?.dispose();
     super.dispose();
   }
 
@@ -51,7 +51,7 @@ class _ProjectListScreenState extends State<ProjectListScreen> {
             ? '${widget.selectionPurpose ?? "選択"}するプロジェクトを選択'
             : 'プロジェクト一覧';
     return ChangeNotifierProvider<ProjectListController>.value(
-      value: _controller,
+      value: _controller!,
       child: Consumer<ProjectListController>(
         builder: (context, controller, _) {
           return AppScaffold(

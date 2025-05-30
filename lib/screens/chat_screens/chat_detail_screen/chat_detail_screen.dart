@@ -26,7 +26,7 @@ class ChatDetailScreen extends StatefulWidget {
 }
 
 class _ChatDetailScreenState extends State<ChatDetailScreen> {
-  late ChatDetailController _controller;
+  ChatDetailController? _controller;
 
   @override
   void initState() {
@@ -35,13 +35,13 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
       chatId: widget.chatId,
       initialChat: widget.prefetchedChat ?? widget.chat,
     );
-    _controller.addListener(_onControllerChanged);
+    _controller!.addListener(_onControllerChanged);
   }
 
   @override
   void dispose() {
-    _controller.removeListener(_onControllerChanged);
-    _controller.dispose();
+    _controller?.removeListener(_onControllerChanged);
+    _controller?.dispose();
     super.dispose();
   }
 
@@ -53,16 +53,19 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final isWideScreen = screenWidth > 1000;
+    if (_controller == null) {
+      return const Center(child: Text('エラー: チャット詳細コントローラーの初期化に失敗しました。'));
+    }
     return AppScaffold(
       title:
-          _controller.isLoading
+          _controller?.isLoading == true
               ? 'チャット読み込み中...'
-              : _controller.chat?.title ?? '',
+              : _controller?.chat?.title ?? '',
       currentNavIndex: 1,
       actions: [
         IconButton(
           icon: const Icon(Icons.refresh),
-          onPressed: _controller.reload,
+          onPressed: _controller!.reload,
         ),
         IconButton(
           icon: const Icon(Icons.more_vert),
@@ -70,41 +73,33 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
         ),
       ],
       body:
-          _controller.isLoading
+          _controller!.isLoading
               ? const Center(child: CircularProgressIndicator())
               : isWideScreen
               ? Row(
                 children: [
                   Container(
                     width: screenWidth * 0.3,
-                    decoration: BoxDecoration(
-                      border: Border(
-                        right: BorderSide(
-                          color: Colors.grey.shade300,
-                          width: 1,
-                        ),
-                      ),
-                      color: Colors.grey.shade50,
-                    ),
+                    decoration: BoxDecoration(color: Colors.grey.shade50),
                     child: const ChatDetailSidebar(),
                   ),
                   Expanded(
                     child: ChatDetailContent(
-                      messages: _controller.messages,
-                      isSending: _controller.isSending,
-                      onSendPressed: _controller.sendMessage,
-                      user: _controller.user,
-                      bot: _controller.bot,
+                      messages: _controller!.messages,
+                      isSending: _controller!.isSending,
+                      onSendPressed: _controller!.sendMessage,
+                      user: _controller!.user,
+                      bot: _controller!.bot,
                     ),
                   ),
                 ],
               )
               : ChatDetailContent(
-                messages: _controller.messages,
-                isSending: _controller.isSending,
-                onSendPressed: _controller.sendMessage,
-                user: _controller.user,
-                bot: _controller.bot,
+                messages: _controller!.messages,
+                isSending: _controller!.isSending,
+                onSendPressed: _controller!.sendMessage,
+                user: _controller!.user,
+                bot: _controller!.bot,
               ),
     );
   }
@@ -136,7 +131,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
 
   void _showEditTitleDialog(BuildContext context) {
     final titleController = TextEditingController(
-      text: _controller.chat?.title ?? '',
+      text: _controller?.chat?.title ?? '',
     );
     showDialog(
       context: context,
@@ -158,7 +153,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
               }
               Navigator.pop(context);
               try {
-                await _controller.updateTitle(title);
+                await _controller!.updateTitle(title);
                 if (mounted) {
                   ScaffoldMessenger.of(
                     context,
@@ -186,7 +181,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
             onClear: () async {
               Navigator.pop(context);
               try {
-                await _controller.clearMessages();
+                await _controller!.clearMessages();
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
                     content: Text('チャット履歴を削除しました'),

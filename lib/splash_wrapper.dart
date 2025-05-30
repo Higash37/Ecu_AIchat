@@ -12,39 +12,20 @@ class SplashWrapper extends StatelessWidget {
   Future<String> initializeApp() async {
     String? guestSessionId;
     try {
-      // Supabase等の初期化は失敗しても致命的にしない
-      try {
-        await Supabase.initialize(
-          url: AppConfig.supabaseUrl,
-          anonKey: AppConfig.supabaseAnonKey,
-        );
-      } catch (e) {
-        print('Supabase初期化失敗: $e');
-      }
-      try {
-        await LocalCacheService.init();
-      } catch (e) {
-        print('LocalCacheService初期化失敗: $e');
-      }
-      try {
-        await Hive.initFlutter();
-      } catch (e) {
-        print('Hive初期化失敗: $e');
-      }
-      try {
-        final box = await Hive.openBox('guest_session');
-        guestSessionId = box.get('guest_session_id');
-        if (guestSessionId == null) {
-          guestSessionId = const Uuid().v4();
-          await box.put('guest_session_id', guestSessionId);
-        }
-      } catch (e) {
-        print('ゲストID生成用box初期化失敗: $e');
-        // boxが開けない場合もUUIDだけ生成
+      await Supabase.initialize(
+        url: AppConfig.supabaseUrl,
+        anonKey: AppConfig.supabaseAnonKey,
+      );
+      await LocalCacheService.init();
+      await Hive.initFlutter();
+      final box = await Hive.openBox('guest_session');
+      guestSessionId = box.get('guest_session_id');
+      if (guestSessionId == null) {
         guestSessionId = const Uuid().v4();
+        await box.put('guest_session_id', guestSessionId);
       }
     } catch (e) {
-      print('initializeApp全体で例外: $e');
+      print('初期化失敗: $e');
       guestSessionId = const Uuid().v4();
     }
     return guestSessionId;
@@ -52,7 +33,19 @@ class SplashWrapper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // まずUIを即時表示し、裏で初期化・接続を進める
-    return ChatScreen(chatId: '', projectId: '');
+    return FutureBuilder<String>(
+      future: initializeApp(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.done) {
+          final chatId =
+              snapshot.data?.isNotEmpty == true
+                  ? snapshot.data!
+                  : const Uuid().v4();
+          return ChatScreen(chatId: chatId, projectId: '');
+        } else {
+          return const Center(child: CircularProgressIndicator());
+        }
+      },
+    );
   }
 }

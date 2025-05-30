@@ -25,19 +25,19 @@ class ChatListScreen extends StatefulWidget {
 }
 
 class _ChatListScreenState extends State<ChatListScreen> {
-  late ChatListController _controller;
+  ChatListController? _controller;
   String? _errorMessage;
 
   @override
   void initState() {
     super.initState();
     _controller = ChatListController(projectId: widget.projectId);
-    _controller.addListener(_onControllerChanged);
+    _controller!.addListener(_onControllerChanged);
     // プリフェッチがあれば即時反映
     if (widget.prefetchedChats != null &&
         (widget.prefetchedChats?.isNotEmpty ?? false)) {
-      _controller.chats = widget.prefetchedChats ?? [];
-      _controller.isLoading = false;
+      _controller!.chats = widget.prefetchedChats ?? [];
+      _controller!.isLoading = false;
     } else {
       _loadChats();
     }
@@ -48,7 +48,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
       _errorMessage = null;
     });
     try {
-      await _controller.loadChats(context);
+      await _controller?.loadChats(context);
     } catch (e) {
       setState(() {
         _errorMessage = 'チャットの読み込みに失敗しました。再試行してください。';
@@ -58,7 +58,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
 
   @override
   void dispose() {
-    _controller.removeListener(_onControllerChanged);
+    _controller?.removeListener(_onControllerChanged);
     super.dispose();
   }
 
@@ -86,7 +86,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
           (context) => DeleteChatDialog(
             chat: chat,
             onDelete: () async {
-              await _controller.deleteChat(context, chat.id);
+              await _controller?.deleteChat(context, chat.id);
             },
           ),
     );
@@ -95,18 +95,18 @@ class _ChatListScreenState extends State<ChatListScreen> {
   @override
   Widget build(BuildContext context) {
     return AppScaffold(
-      title: _controller.projectTitle,
+      title: _controller?.projectTitle ?? '',
       currentNavIndex: 1,
       showBottomNav: false,
       actions: [
         IconButton(icon: const Icon(Icons.refresh), onPressed: _loadChats),
       ],
       body:
-          _controller.isLoading
+          _controller?.isLoading == true
               ? const Center(child: CircularProgressIndicator())
               : _errorMessage != null
               ? _buildErrorState()
-              : _controller.chats.isEmpty
+              : (_controller?.chats.isEmpty ?? true)
               ? _buildEmptyState()
               : _buildChatList(),
       floatingActionButton: FloatingActionButton(
@@ -142,9 +142,9 @@ class _ChatListScreenState extends State<ChatListScreen> {
   Widget _buildChatList() {
     return ListView.builder(
       padding: const EdgeInsets.all(16),
-      itemCount: _controller.chats.length,
+      itemCount: _controller!.chats.length,
       itemBuilder: (context, index) {
-        final chat = _controller.chats[index];
+        final chat = _controller!.chats[index];
         return ChatListItem(
           chat: chat,
           onDelete: () => _confirmDeleteChat(chat),
@@ -158,7 +158,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
                       projectId: chat.projectId ?? '',
                     ),
               ),
-            ).then((_) => _controller.loadChats(context));
+            ).then((_) => _controller?.loadChats(context));
           },
         );
       },
