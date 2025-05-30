@@ -39,13 +39,20 @@ class ChatScreenController extends ChangeNotifier {
   }
   Future<void> init() async {
     final user = await LocalCacheService.getUserInfo();
-    final userId = user?['user_id'] ?? '';
-    await loadChatHistory(userId: userId);
+    final userId = user?['user_id'];
+    if (chatId.isEmpty) {
+      throw Exception('Chat ID is empty. Cannot proceed.');
+    }
+    if (userId == null || userId.isEmpty) {
+      // ゲストユーザーとして読み込み
+      await loadChatHistory(userId: null);
+    } else {
+      await loadChatHistory(userId: userId);
+    }
   }
 
   /// チャットルームごとに履歴を自動ロード（ローカルキャッシュ即時反映→API取得後差し替え）
   Future<void> loadChatHistory({String? userId}) async {
-    // 1. まずローカルキャッシュを即時反映
     messages.clear();
     List<Message> cached = await LocalCacheService.getCachedMessages(chatId);
     List<types.Message> temp = [];
@@ -59,36 +66,37 @@ class ChatScreenController extends ChangeNotifier {
         ),
       );
     }
+    messages.addAll(temp);
     messages.addAll(_messageManager.getPairedMessages());
     notifyListeners();
 
-    // 2. API取得を試み、取得できたら差分があればmessagesを更新
-    if (userId != null && userId.isNotEmpty) {
-      try {
-        final history = await _messageService.fetchMessagesByChat(
-          chatId,
-          userId,
-        );
-        if (history.length != cached.length ||
-            !_messageManager.isSameMessageList(history, cached)) {
-          messages.clear();
-          List<types.Message> temp2 = [];
-          for (final msg in history) {
-            temp2.add(
-              types.TextMessage(
-                author: msg.sender == 'user' ? _user : _bot,
-                createdAt: msg.createdAt.millisecondsSinceEpoch,
-                id: msg.id,
-                text: msg.content,
-              ),
-            );
-          }
-          messages.addAll(_messageManager.getPairedMessages());
-          notifyListeners();
+    // Supabase側に問い合わせるのは、有効なIDがあるときだけ
+    if (chatId.isEmpty || userId == null || userId.isEmpty) {
+      return;
+    }
+
+    try {
+      final history = await _messageService.fetchMessagesByChat(chatId, userId);
+      if (history.length != cached.length ||
+          !_messageManager.isSameMessageList(history, cached)) {
+        messages.clear();
+        List<types.Message> temp2 = [];
+        for (final msg in history) {
+          temp2.add(
+            types.TextMessage(
+              author: msg.sender == 'user' ? _user : _bot,
+              createdAt: msg.createdAt.millisecondsSinceEpoch,
+              id: msg.id,
+              text: msg.content,
+            ),
+          );
         }
-      } catch (_) {
-        // API失敗時はキャッシュのまま
+        messages.addAll(temp2);
+        messages.addAll(_messageManager.getPairedMessages());
+        notifyListeners();
       }
+    } catch (e) {
+      // API失敗時はキャッシュのまま
     }
   }
 
@@ -246,6 +254,7 @@ class ChatScreenController extends ChangeNotifier {
     String? userId,
     bool isLoggedIn = false,
   ]) async {
+    if (chatId.isEmpty) return;
     final userMessage = Message(
       id: const Uuid().v4(),
       chatId: chatId,
