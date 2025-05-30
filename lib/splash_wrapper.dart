@@ -33,7 +33,7 @@ class SplashWrapper extends StatelessWidget {
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.done) {
           if (snapshot.hasData) {
-            return ChatScreen(chatId: snapshot.data!, projectId: '');
+            return ChatScreen(chatId: snapshot.data ?? '', projectId: '');
           } else {
             // エラーハンドリング: 有効なIDが取得できなかった場合は新しいIDを生成
             final fallbackId = const Uuid().v4();

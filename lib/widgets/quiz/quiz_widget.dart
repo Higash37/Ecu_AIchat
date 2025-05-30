@@ -67,8 +67,8 @@ class _QuizWidgetState extends State<QuizWidget> {
                 children: [
                   if (widget.quiz.difficulty != null)
                     QuizBadge(
-                      text: widget.quiz.difficulty!,
-                      color: _getDifficultyColor(widget.quiz.difficulty!),
+                      text: widget.quiz.difficulty ?? '',
+                      color: _getDifficultyColor(widget.quiz.difficulty ?? ''),
                       icon: Icons.signal_cellular_alt,
                     ),
                   if (widget.quiz.difficulty != null &&
@@ -76,7 +76,7 @@ class _QuizWidgetState extends State<QuizWidget> {
                     const SizedBox(width: 8),
                   if (widget.quiz.category != null)
                     QuizBadge(
-                      text: widget.quiz.category!,
+                      text: widget.quiz.category ?? '',
                       color: Colors.blue.shade700,
                       icon: Icons.category,
                     ),
@@ -190,7 +190,7 @@ class _QuizWidgetState extends State<QuizWidget> {
                   if (_showExplanation && _selectedOptionIndex != null)
                     QuizExplanation(
                       quiz: widget.quiz,
-                      index: _selectedOptionIndex!,
+                      index: _selectedOptionIndex ?? 0,
                       onRetry: () {
                         setState(() {
                           _isExpanded = false;

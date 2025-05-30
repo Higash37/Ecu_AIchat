@@ -375,7 +375,7 @@ class _MarkdownMessageState extends State<MarkdownMessage> {
                           ),
                           const SizedBox(width: 6),
                           Text(
-                            _currentEmotion!,
+                            _currentEmotion ?? '',
                             style: TextStyle(
                               color:
                                   emotionColorMap[_currentEmotion] ??

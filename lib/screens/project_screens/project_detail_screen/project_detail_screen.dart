@@ -80,7 +80,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
                             throw Exception('プロジェクトIDが未設定です');
                           }
                           await _controller.projectService.deleteProject(
-                            widget.project.id!,
+                            widget.project.id ?? '',
                           );
                           if (mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
@@ -141,7 +141,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
                   MaterialPageRoute(
                     builder:
                         (context) =>
-                            TagListScreen(projectId: widget.project.id!),
+                            TagListScreen(projectId: widget.project.id ?? ''),
                   ),
                 );
               }

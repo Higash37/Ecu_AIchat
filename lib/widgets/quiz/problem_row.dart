@@ -33,11 +33,11 @@ class ProblemRow extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              if (caution != null && caution!.isNotEmpty)
+              if ((caution ?? '').isNotEmpty)
                 Padding(
                   padding: const EdgeInsets.only(bottom: 4),
                   child: Text(
-                    caution!,
+                    caution ?? '',
                     style: const TextStyle(
                       color: Color(0xFFB71C1C), // 濃い赤
                       decoration: TextDecoration.underline,
@@ -45,24 +45,24 @@ class ProblemRow extends StatelessWidget {
                     ),
                   ),
                 ),
-              if (hint != null && hint!.isNotEmpty)
+              if ((hint ?? '').isNotEmpty)
                 Padding(
                   padding: const EdgeInsets.only(bottom: 4),
                   child: Text(
-                    hint!,
+                    hint ?? '',
                     style: const TextStyle(
                       color: Color(0xFF00FF00), // 緑（PDF時赤シートで隠れる色例）
                       decoration: TextDecoration.underline,
                     ),
                   ),
                 ),
-              if (praise != null && praise!.isNotEmpty)
+              if ((praise ?? '').isNotEmpty)
                 Padding(
                   padding: const EdgeInsets.only(bottom: 4),
                   child: Text(
-                    praise!,
+                    praise ?? '',
                     style: const TextStyle(
-                      color: Colors.black87,
+                      color: Color(0xFF222222),
                       fontWeight: FontWeight.bold,
                       decoration: TextDecoration.underline,
                     ),

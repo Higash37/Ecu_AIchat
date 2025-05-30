@@ -65,10 +65,9 @@ class DrawerChatItem extends StatelessWidget {
                       ),
                       overflow: TextOverflow.ellipsis,
                     ),
-                    if (chat.lastMessage != null &&
-                        chat.lastMessage!.isNotEmpty)
+                    if ((chat.lastMessage ?? '').isNotEmpty)
                       Text(
-                        chat.lastMessage!,
+                        chat.lastMessage ?? '',
                         style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,

@@ -25,7 +25,7 @@ class ProjectService {
     final response = await supabase
         .from('projects')
         .update(project.toMap())
-        .eq('id', project.id!); // project.idはnullでないので!で明示
+        .eq('id', project.id ?? ''); // project.idはnullでないので!で明示
 
     if (response == null) throw Exception('プロジェクトの更新に失敗しました');
   }

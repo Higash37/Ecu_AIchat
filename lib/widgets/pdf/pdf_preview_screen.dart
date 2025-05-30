@@ -62,13 +62,13 @@ class PdfPreviewScreen extends StatelessWidget {
                                   crossAxisAlignment:
                                       pw.CrossAxisAlignment.start,
                                   children: [
-                                    if (caution != null && caution!.isNotEmpty)
+                                    if ((caution ?? '').isNotEmpty)
                                       pw.Padding(
                                         padding: const pw.EdgeInsets.only(
                                           bottom: 4,
                                         ),
                                         child: pw.Text(
-                                          caution!,
+                                          caution ?? '',
                                           style: pw.TextStyle(
                                             color: pdf.PdfColor.fromHex(
                                               '#B71C1C',
@@ -81,13 +81,13 @@ class PdfPreviewScreen extends StatelessWidget {
                                           ),
                                         ),
                                       ),
-                                    if (hint != null && hint!.isNotEmpty)
+                                    if ((hint ?? '').isNotEmpty)
                                       pw.Padding(
                                         padding: const pw.EdgeInsets.only(
                                           bottom: 4,
                                         ),
                                         child: pw.Text(
-                                          hint!,
+                                          hint ?? '',
                                           style: pw.TextStyle(
                                             color: pdf.PdfColor.fromHex(
                                               '#00FF00',
@@ -99,13 +99,13 @@ class PdfPreviewScreen extends StatelessWidget {
                                           ),
                                         ),
                                       ),
-                                    if (praise != null && praise!.isNotEmpty)
+                                    if ((praise ?? '').isNotEmpty)
                                       pw.Padding(
                                         padding: const pw.EdgeInsets.only(
                                           bottom: 4,
                                         ),
                                         child: pw.Text(
-                                          praise!,
+                                          praise ?? '',
                                           style: pw.TextStyle(
                                             color: pdf.PdfColor.fromHex(
                                               '#222222',
