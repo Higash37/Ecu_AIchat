@@ -1,17 +1,6 @@
 import 'package:pdf/widgets.dart' as pw;
 import 'package:pdf/pdf.dart';
-
-class Question {
-  final String question;
-  final List<String>? options;
-  Question({required this.question, this.options});
-}
-
-class Answer {
-  final String answer;
-  final String? explanation;
-  Answer({required this.answer, this.explanation});
-}
+import '../models/quiz.dart';
 
 pw.Document buildKumonStylePdf({
   required String title,

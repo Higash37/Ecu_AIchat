@@ -3,10 +3,8 @@ import 'project_detail_header.dart';
 import 'project_detail_empty.dart';
 import 'project_detail_chat_list.dart';
 import '../../../models/project.dart';
-import '../../../models/chat.dart';
 import '../../../services/chat_service.dart';
 import '../../../services/project_service.dart';
-import '../../../services/local_cache_service.dart';
 import '../../../theme/app_theme.dart';
 import '../../../widgets/sides/drawer/app_scaffold.dart';
 import '../../tag_screens/tag_list_screen/tag_list_screen.dart';
@@ -16,6 +14,7 @@ import 'project_detail_toast.dart';
 import '../../../widgets/common/error_state_widget.dart';
 import '../../chat_screens/chat_screen/chat_screen.dart';
 import 'package:uuid/uuid.dart';
+import 'project_detail_controller.dart';
 
 class ProjectDetailScreen extends StatefulWidget {
   final Project project;
@@ -27,43 +26,28 @@ class ProjectDetailScreen extends StatefulWidget {
 }
 
 class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
-  final _chatService = ChatService();
-  final _projectService = ProjectService();
-  List<Chat> _chats = [];
-  bool _isLoading = true;
-  String? _errorMessage;
+  late final ProjectDetailController _controller;
 
   @override
   void initState() {
     super.initState();
-    _loadChats();
+    _controller = ProjectDetailController(
+      project: widget.project,
+      chatService: ChatService(),
+      projectService: ProjectService(),
+    );
+    _controller.addListener(_onControllerChanged);
+    _controller.loadChats();
   }
 
-  Future<void> _loadChats() async {
-    setState(() {
-      _isLoading = true;
-      _errorMessage = null;
-    });
-    try {
-      if (widget.project.id == null) {
-        throw Exception('プロジェクトIDが未設定です');
-      }
-      final user = await LocalCacheService.getUserInfo();
-      final userId = user?['user_id'] ?? '';
-      final chats = await _chatService.fetchChatsByProjectId(
-        widget.project.id!,
-        userId,
-      );
-      setState(() {
-        _chats = chats;
-        _isLoading = false;
-      });
-    } catch (e) {
-      setState(() {
-        _isLoading = false;
-        _errorMessage = 'チャットの読み込みに失敗しました。再試行してください。';
-      });
-    }
+  @override
+  void dispose() {
+    _controller.removeListener(_onControllerChanged);
+    super.dispose();
+  }
+
+  void _onControllerChanged() {
+    if (mounted) setState(() {});
   }
 
   @override
@@ -78,7 +62,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
               () => showEditProjectDialog(
                 context: context,
                 project: widget.project,
-                projectService: _projectService,
+                projectService: _controller.projectService,
                 onUpdated: () => setState(() {}),
               ),
         ),
@@ -95,7 +79,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
                           if (widget.project.id == null) {
                             throw Exception('プロジェクトIDが未設定です');
                           }
-                          await _projectService.deleteProject(
+                          await _controller.projectService.deleteProject(
                             widget.project.id!,
                           );
                           if (mounted) {
@@ -137,7 +121,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
         children: [
           ProjectDetailHeader(
             project: widget.project,
-            chatCount: _chats.length,
+            chatCount: _controller.chats.length,
             onCreateChat: () {
               Navigator.push(
                 context,
@@ -184,21 +168,21 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
                 TextButton.icon(
                   icon: const Icon(Icons.refresh, size: 16),
                   label: const Text('更新'),
-                  onPressed: _loadChats,
+                  onPressed: _controller.loadChats,
                 ),
               ],
             ),
           ),
           Expanded(
             child:
-                _isLoading
+                _controller.isLoading
                     ? const Center(child: CircularProgressIndicator())
-                    : _errorMessage != null
+                    : _controller.errorMessage != null
                     ? ErrorStateWidget(
-                      message: _errorMessage ?? 'エラーが発生しました',
-                      onRetry: _loadChats,
+                      message: _controller.errorMessage ?? 'エラーが発生しました',
+                      onRetry: _controller.loadChats,
                     )
-                    : _chats.isEmpty
+                    : _controller.chats.isEmpty
                     ? ProjectDetailEmpty(
                       onCreateChat: () {
                         Navigator.push(
@@ -214,37 +198,19 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
                       },
                     )
                     : ProjectDetailChatList(
-                      chats: _chats,
+                      chats: _controller.chats,
                       onDeleteChat:
                           (chat) => showConfirmDeleteChat(
                             context: context,
                             chat: chat,
-                            onDelete: () => _deleteChat(chat.id),
+                            onDelete:
+                                () => _controller.deleteChat(chat.id, context),
                           ),
                     ),
           ),
         ],
       ),
     );
-  }
-
-  Future<void> _deleteChat(String chatId) async {
-    try {
-      final chatService = ChatService();
-      await chatService.deleteChat(chatId);
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('チャットを削除しました')));
-        _loadChats();
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('チャットの削除に失敗しました: $e')));
-      }
-    }
   }
 
   Widget _buildPdfGenerationSheet(BuildContext context) {

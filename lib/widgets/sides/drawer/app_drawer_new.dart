@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
-import '../../../models/chat.dart';
 import '../../../screens/project_screens/project_list_screen/project_list_screen.dart';
 import '../../../screens/chat_screens/chat_screen/chat_screen.dart';
 import '../../../screens/tag_screens/tag_list_screen/tag_list_screen.dart';
-import '../../../services/chat_service.dart';
-import '../../../services/local_cache_service.dart';
+import 'app_drawer_controller.dart';
 import 'drawer_section_header.dart';
 import 'drawer_chat_item.dart';
 import 'drawer_menu_item.dart';
@@ -14,85 +13,25 @@ import 'drawer_view_all_chats.dart';
 import 'drawer_toast.dart';
 import '../../auth/login_dialog.dart';
 
-class AppDrawerNew extends StatefulWidget {
+class AppDrawerNew extends StatelessWidget {
   const AppDrawerNew({super.key});
 
   @override
-  State<AppDrawerNew> createState() => _AppDrawerNewState();
+  Widget build(BuildContext context) {
+    return ChangeNotifierProvider(
+      create: (_) => AppDrawerController(),
+      child: const _AppDrawerNewBody(),
+    );
+  }
 }
 
-class _AppDrawerNewState extends State<AppDrawerNew> {
-  final ChatService _chatService = ChatService();
-  List<Chat> _recentChats = [];
-  bool _isLoading = true;
-  bool _isLoggedIn = false;
-  String? _nickname;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadRecentChats();
-    _restoreLoginState();
-  }
-
-  Future<void> _loadRecentChats() async {
-    try {
-      // 直近のチャット履歴を取得（最大10件）
-      final user = await LocalCacheService.getUserInfo();
-      final userId = user?['user_id'] ?? '';
-      final allChats = await _chatService.fetchAllChats(userId);
-      // 通信成功時はキャッシュ保存
-      await LocalCacheService.cacheChats(allChats);
-      setState(() {
-        _recentChats = allChats.take(10).toList();
-        _isLoading = false;
-      });
-    } catch (e) {
-      // 通信失敗時はキャッシュから取得
-      final cached = LocalCacheService.getCachedChats();
-      setState(() {
-        _recentChats = cached.take(10).toList();
-        _isLoading = false;
-      });
-      // オフライン表示通知（任意）
-      // ScaffoldMessenger.of(context).showSnackBar(...)
-    }
-  }
-
-  Future<void> _restoreLoginState() async {
-    final user = await LocalCacheService.getUserInfo();
-    if (user != null) {
-      setState(() {
-        _isLoggedIn = true;
-        _nickname = user['nickname'];
-      });
-    }
-  }
-
-  void _showLoginDialog() async {
-    final result = await showDialog(
-      context: context,
-      builder:
-          (context) => LoginDialog(
-            onSubmit: (nickname, password, isLogin) {}, // ダミー
-          ),
-    );
-    if (result is Map &&
-        result['user_id'] != null &&
-        result['nickname'] != null) {
-      await LocalCacheService.saveUserInfo(
-        result['user_id'],
-        result['nickname'],
-      );
-      setState(() {
-        _isLoggedIn = true;
-        _nickname = result['nickname'];
-      });
-    }
-  }
+class _AppDrawerNewBody extends StatelessWidget {
+  const _AppDrawerNewBody();
 
   @override
   Widget build(BuildContext context) {
+    final controller = Provider.of<AppDrawerController>(context);
+
     return Drawer(
       child: Container(
         color: Colors.white,
@@ -174,7 +113,7 @@ class _AppDrawerNewState extends State<AppDrawerNew> {
                   ),
 
                   // 最近のチャット一覧
-                  _isLoading
+                  controller.isLoading
                       ? const Center(
                         child: Padding(
                           padding: EdgeInsets.all(8.0),
@@ -187,7 +126,7 @@ class _AppDrawerNewState extends State<AppDrawerNew> {
                       )
                       : Column(
                         children:
-                            _recentChats.map((chat) {
+                            controller.recentChats.map((chat) {
                               return DrawerChatItem(chat: chat);
                             }).toList(),
                       ),
@@ -257,7 +196,7 @@ class _AppDrawerNewState extends State<AppDrawerNew> {
               ),
             ),
             // ログイン/ユーザー表示導線
-            if (!_isLoggedIn)
+            if (!controller.isLoggedIn)
               Padding(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 16,
@@ -266,7 +205,23 @@ class _AppDrawerNewState extends State<AppDrawerNew> {
                 child: ElevatedButton.icon(
                   icon: const Icon(Icons.login),
                   label: const Text('ログイン / 新規登録'),
-                  onPressed: _showLoginDialog,
+                  onPressed: () async {
+                    final result = await showDialog(
+                      context: context,
+                      builder:
+                          (context) => LoginDialog(
+                            onSubmit: (nickname, password, isLogin) {}, // ダミー
+                          ),
+                    );
+                    if (result is Map &&
+                        result['user_id'] != null &&
+                        result['nickname'] != null) {
+                      await controller.login(
+                        result['user_id'],
+                        result['nickname'],
+                      );
+                    }
+                  },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF6C63FF),
                     foregroundColor: Colors.white,
@@ -285,18 +240,13 @@ class _AppDrawerNewState extends State<AppDrawerNew> {
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        _nickname ?? '',
+                        controller.nickname ?? '',
                         style: const TextStyle(fontWeight: FontWeight.bold),
                       ),
                     ),
                     TextButton(
                       onPressed: () async {
-                        // ログアウト処理
-                        await LocalCacheService.clearUserInfo();
-                        setState(() {
-                          _isLoggedIn = false;
-                          _nickname = null;
-                        });
+                        await controller.logout();
                       },
                       child: const Text('ログアウト'),
                     ),

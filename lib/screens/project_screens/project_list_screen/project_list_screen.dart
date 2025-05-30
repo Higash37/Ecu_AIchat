@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:uuid/uuid.dart';
+import 'package:provider/provider.dart';
+import 'project_list_controller.dart';
 import '../../../models/project.dart';
-import '../../../services/project_service.dart';
 import '../../../theme/app_theme.dart';
 import '../../../widgets/sides/drawer/app_scaffold.dart';
 import '../project_detail_screen/project_detail_screen.dart';
@@ -29,42 +29,19 @@ class ProjectListScreen extends StatefulWidget {
 }
 
 class _ProjectListScreenState extends State<ProjectListScreen> {
-  final _projectService = ProjectService();
-  List<Project> _projects = [];
-  bool _isLoading = true;
-  String? _errorMessage; // エラー状態追加
+  late ProjectListController _controller;
 
   @override
   void initState() {
     super.initState();
-    // プリフェッチがあれば即時反映
-    if (widget.prefetchedProjects != null &&
-        widget.prefetchedProjects!.isNotEmpty) {
-      _projects = widget.prefetchedProjects!;
-      _isLoading = false;
-    } else {
-      _loadProjects();
-    }
+    _controller = ProjectListController();
+    _controller.loadProjects(prefetched: widget.prefetchedProjects);
   }
 
-  Future<void> _loadProjects() async {
-    setState(() {
-      _isLoading = true;
-      _errorMessage = null;
-    });
-
-    try {
-      final projects = await _projectService.fetchProjects();
-      setState(() {
-        _projects = projects;
-        _isLoading = false;
-      });
-    } catch (e) {
-      setState(() {
-        _isLoading = false;
-        _errorMessage = 'プロジェクトの読み込みに失敗しました。再試行してください。';
-      });
-    }
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
   }
 
   @override
@@ -73,60 +50,71 @@ class _ProjectListScreenState extends State<ProjectListScreen> {
         widget.forSelection
             ? '${widget.selectionPurpose ?? "選択"}するプロジェクトを選択'
             : 'プロジェクト一覧';
-    return AppScaffold(
-      title: title,
-      currentNavIndex: 0,
-      showBottomNav: false, // ボトムナビゲーションを非表示
-      actions: [
-        IconButton(icon: const Icon(Icons.refresh), onPressed: _loadProjects),
-      ],
-      body:
-          _isLoading
-              ? const Center(child: CircularProgressIndicator())
-              : _errorMessage != null
-              ? _buildErrorState()
-              : _projects.isEmpty
-              ? ProjectListEmpty(
-                forSelection: widget.forSelection,
-                selectionPurpose: widget.selectionPurpose,
-              )
-              : ListView.builder(
-                padding: const EdgeInsets.all(16),
-                itemCount: _projects.length,
-                itemBuilder: (context, index) {
-                  final project = _projects[index];
-                  return ProjectListItem(
-                    project: project,
-                    forSelection: widget.forSelection,
-                    onTap: () {
-                      if (widget.forSelection) {
-                        Navigator.pop(context, project);
-                      } else {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder:
-                                (context) =>
-                                    ProjectDetailScreen(project: project),
-                          ),
-                        ).then((_) => _loadProjects());
-                      }
-                    },
-                  );
-                },
+    return ChangeNotifierProvider<ProjectListController>.value(
+      value: _controller,
+      child: Consumer<ProjectListController>(
+        builder: (context, controller, _) {
+          return AppScaffold(
+            title: title,
+            currentNavIndex: 0,
+            showBottomNav: false,
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.refresh),
+                onPressed: controller.loadProjects,
               ),
-      floatingActionButton:
-          widget.forSelection
-              ? null
-              : FloatingActionButton(
-                backgroundColor: AppTheme.primaryColor,
-                onPressed: () => _showCreateProjectDialog(context),
-                child: const Icon(Icons.add),
-              ),
+            ],
+            body:
+                controller.isLoading
+                    ? const Center(child: CircularProgressIndicator())
+                    : controller.errorMessage != null
+                    ? _buildErrorState(controller)
+                    : controller.projects.isEmpty
+                    ? ProjectListEmpty(
+                      forSelection: widget.forSelection,
+                      selectionPurpose: widget.selectionPurpose,
+                    )
+                    : ListView.builder(
+                      padding: const EdgeInsets.all(16),
+                      itemCount: controller.projects.length,
+                      itemBuilder: (context, index) {
+                        final project = controller.projects[index];
+                        return ProjectListItem(
+                          project: project,
+                          forSelection: widget.forSelection,
+                          onTap: () {
+                            if (widget.forSelection) {
+                              Navigator.pop(context, project);
+                            } else {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder:
+                                      (context) =>
+                                          ProjectDetailScreen(project: project),
+                                ),
+                              ).then((_) => controller.loadProjects());
+                            }
+                          },
+                        );
+                      },
+                    ),
+            floatingActionButton:
+                widget.forSelection
+                    ? null
+                    : FloatingActionButton(
+                      backgroundColor: AppTheme.primaryColor,
+                      onPressed:
+                          () => _showCreateProjectDialog(context, controller),
+                      child: const Icon(Icons.add),
+                    ),
+          );
+        },
+      ),
     );
   }
 
-  Widget _buildErrorState() {
+  Widget _buildErrorState(ProjectListController controller) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -134,17 +122,23 @@ class _ProjectListScreenState extends State<ProjectListScreen> {
           Icon(Icons.error_outline, size: 64, color: Colors.redAccent),
           const SizedBox(height: 16),
           Text(
-            _errorMessage ?? 'エラーが発生しました',
+            controller.errorMessage ?? 'エラーが発生しました',
             style: const TextStyle(fontSize: 16, color: Colors.redAccent),
           ),
           const SizedBox(height: 16),
-          ElevatedButton(onPressed: _loadProjects, child: const Text('再試行')),
+          ElevatedButton(
+            onPressed: controller.loadProjects,
+            child: const Text('再試行'),
+          ),
         ],
       ),
     );
   }
 
-  void _showCreateProjectDialog(BuildContext context) {
+  void _showCreateProjectDialog(
+    BuildContext context,
+    ProjectListController controller,
+  ) {
     final nameController = TextEditingController();
     final descriptionController = TextEditingController();
 
@@ -189,38 +183,21 @@ class _ProjectListScreenState extends State<ProjectListScreen> {
                     );
                     return;
                   }
-
-                  final project = Project(
-                    id: Uuid().v4(), // Supabaseで自動生成しない場合はここで生成
-                    name: name,
-                    description:
-                        descriptionController.text.trim().isNotEmpty
-                            ? descriptionController.text.trim()
-                            : null,
-                    createdAt: DateTime.now(),
-                  );
-
-                  // ダイアログを閉じる
                   Navigator.pop(context);
-
-                  try {
-                    // プロジェクトを作成
-                    await _projectService.createProject(project);
-                    // リストを更新
-                    _loadProjects();
-
-                    // 成功メッセージ
-                    if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('プロジェクトを作成しました')),
-                      );
-                    }
-                  } catch (e) {
-                    if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('プロジェクトの作成に失敗しました: $e')),
-                      );
-                    }
+                  final success = await controller.createProject(
+                    name,
+                    descriptionController.text,
+                  );
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          success
+                              ? 'プロジェクトを作成しました'
+                              : (controller.errorMessage ?? 'プロジェクトの作成に失敗しました'),
+                        ),
+                      ),
+                    );
                   }
                 },
                 child: const Text('作成'),

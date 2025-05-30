@@ -20,6 +20,7 @@ app.add_middleware(
     allow_origins=[
         "*", 
         "https://ecu-a-ichat-dvsd.vercel.app",  # メインURL
+        "https://ecu-aichat-frontend.onrender.com",  # RenderデプロイURL
         "https://ecu-a-ichat-dvsd-git-main-higash37s-projects.vercel.app",  # ブランチURL
         "https://ecu-a-ichat-dvsd-28ij9jftt-higash37s-projects.vercel.app"  # デプロイURL
     ],

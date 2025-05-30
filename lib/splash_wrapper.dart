@@ -31,9 +31,15 @@ class SplashWrapper extends StatelessWidget {
     return FutureBuilder<String>(
       future: initializeApp(),
       builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.done &&
-            snapshot.hasData) {
-          return ChatScreen(chatId: snapshot.data!, projectId: '');
+        if (snapshot.connectionState == ConnectionState.done) {
+          if (snapshot.hasData) {
+            return ChatScreen(chatId: snapshot.data!, projectId: '');
+          } else {
+            // エラーハンドリング: 有効なIDが取得できなかった場合は新しいIDを生成
+            final fallbackId = const Uuid().v4();
+            print('警告: ゲストセッションIDが取得できませんでした。代替ID生成: $fallbackId');
+            return ChatScreen(chatId: fallbackId, projectId: '');
+          }
         } else {
           return const SplashScreen();
         }

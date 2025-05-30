@@ -10,6 +10,9 @@ import '../../utils/markdown_symbol_utils.dart';
 import 'markdown_message_header.dart';
 import 'markdown_message_action_buttons.dart';
 import 'markdown_message_content.dart';
+import 'reasoning_expandable.dart';
+import 'knowledge_graph_mini_view.dart';
+import 'animated_typing_text.dart';
 
 class MarkdownMessage extends StatefulWidget {
   final types.TextMessage message;
@@ -280,7 +283,7 @@ class _MarkdownMessageState extends State<MarkdownMessage> {
                                   child:
                                       (!widget.isUserMessage &&
                                               !_animationCompleted)
-                                          ? _AnimatedTypingText(
+                                          ? AnimatedTypingText(
                                             text: _convertSuperscript(
                                               widget.message.text,
                                             ),
@@ -392,7 +395,7 @@ class _MarkdownMessageState extends State<MarkdownMessage> {
                       widget.message.metadata!['reasoning'] != null)
                     Padding(
                       padding: const EdgeInsets.only(bottom: 8.0),
-                      child: _ReasoningExpandable(
+                      child: ReasoningExpandable(
                         reasoning:
                             widget.message.metadata!['reasoning'] as String,
                       ),
@@ -453,7 +456,7 @@ class _MarkdownMessageState extends State<MarkdownMessage> {
                       widget.message.metadata!['knowledge_graph'] != null)
                     Padding(
                       padding: const EdgeInsets.only(bottom: 8.0),
-                      child: _KnowledgeGraphMiniView(
+                      child: KnowledgeGraphMiniView(
                         graphData: widget.message.metadata!['knowledge_graph'],
                       ),
                     ),
@@ -496,162 +499,5 @@ class _MarkdownMessageState extends State<MarkdownMessage> {
         );
       },
     );
-  }
-}
-
-// reasoning展開用ウィジェット
-class _ReasoningExpandable extends StatefulWidget {
-  final String reasoning;
-  const _ReasoningExpandable({required this.reasoning});
-  @override
-  State<_ReasoningExpandable> createState() => _ReasoningExpandableState();
-}
-
-class _ReasoningExpandableState extends State<_ReasoningExpandable> {
-  bool _expanded = false;
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () => setState(() => _expanded = !_expanded),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 250),
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        decoration: BoxDecoration(
-          color: Colors.amber.withOpacity(0.12),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Icon(
-              _expanded ? Icons.expand_less : Icons.psychology,
-              color: Colors.amber,
-              size: 18,
-            ),
-            const SizedBox(width: 6),
-            Expanded(
-              child: AnimatedCrossFade(
-                duration: const Duration(milliseconds: 250),
-                crossFadeState:
-                    _expanded
-                        ? CrossFadeState.showSecond
-                        : CrossFadeState.showFirst,
-                firstChild: Text(
-                  'AIの思考経路を表示',
-                  style: TextStyle(color: Colors.amber.shade800, fontSize: 12),
-                ),
-                secondChild: Text(
-                  widget.reasoning,
-                  style: TextStyle(color: Colors.amber.shade800, fontSize: 12),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// 簡易知識グラフ可視化ウィジェット
-class _KnowledgeGraphMiniView extends StatelessWidget {
-  final dynamic graphData; // MapやList形式を想定
-  const _KnowledgeGraphMiniView({required this.graphData});
-  @override
-  Widget build(BuildContext context) {
-    // 超簡易: ノード名と関係線をリストで表示（本格可視化は今後拡張）
-    if (graphData is Map && graphData.isNotEmpty) {
-      return Container(
-        padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(
-          color: Colors.blueGrey.withOpacity(0.08),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(Icons.graphic_eq, color: Colors.blueGrey, size: 16),
-                const SizedBox(width: 6),
-                Text(
-                  '知識グラフ',
-                  style: TextStyle(fontSize: 12, color: Colors.blueGrey),
-                ),
-              ],
-            ),
-            const SizedBox(height: 4),
-            ...graphData.entries
-                .take(5)
-                .map(
-                  (e) => Text(
-                    '・${e.key} → ${e.value}',
-                    style: const TextStyle(fontSize: 11, color: Colors.black87),
-                  ),
-                ),
-            if (graphData.length > 5)
-              const Text(
-                '...（一部表示）',
-                style: TextStyle(fontSize: 10, color: Colors.grey),
-              ),
-          ],
-        ),
-      );
-    }
-    return const SizedBox.shrink();
-  }
-}
-
-// --- ここからAIメッセージのアニメーション表示を独自実装に置き換え ---
-class _AnimatedTypingText extends StatefulWidget {
-  final String text;
-  final TextStyle style;
-  final VoidCallback? onFinished;
-  const _AnimatedTypingText({
-    required this.text,
-    required this.style,
-    this.onFinished,
-  });
-  @override
-  State<_AnimatedTypingText> createState() => _AnimatedTypingTextState();
-}
-
-class _AnimatedTypingTextState extends State<_AnimatedTypingText> {
-  String _displayText = '';
-  Timer? _timer;
-  @override
-  void initState() {
-    super.initState();
-    _startAnimation();
-  }
-
-  void _startAnimation() {
-    const chunkSize = 3;
-    int index = 0;
-    _timer = Timer.periodic(const Duration(milliseconds: 40), (timer) {
-      if (index >= widget.text.length) {
-        timer.cancel();
-        widget.onFinished?.call();
-      } else {
-        setState(() {
-          _displayText = widget.text.substring(
-            0,
-            (index + chunkSize).clamp(0, widget.text.length),
-          );
-        });
-        index += chunkSize;
-      }
-    });
-  }
-
-  @override
-  void dispose() {
-    _timer?.cancel();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Text(_displayText, style: widget.style);
   }
 }
