@@ -2,14 +2,8 @@ import 'package:flutter/material.dart';
 
 class ChatMessageActionButtons extends StatelessWidget {
   final void Function()? onRegenerate;
-  final void Function()? onRequest;
   final void Function()? onCopy;
-  const ChatMessageActionButtons({
-    super.key,
-    this.onRegenerate,
-    this.onRequest,
-    this.onCopy,
-  });
+  const ChatMessageActionButtons({super.key, this.onRegenerate, this.onCopy});
 
   @override
   Widget build(BuildContext context) {
@@ -21,13 +15,6 @@ class ChatMessageActionButtons extends StatelessWidget {
           Icons.refresh,
           '再生成',
           onPressed: onRegenerate,
-        ),
-        const SizedBox(width: 8),
-        _buildActionButton(
-          context,
-          Icons.edit_note,
-          '要望追加',
-          onPressed: onRequest,
         ),
         const SizedBox(width: 8),
         _buildActionButton(

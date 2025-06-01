@@ -177,53 +177,40 @@ class _ChatInputFieldState extends State<ChatInputField> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 8,
-            offset: const Offset(0, -2),
-          ),
-        ],
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          IconButton(
-            icon: const Icon(Icons.add_circle_outline),
-            color: AppTheme.primaryColor,
-            onPressed: () {
-              // ファイル添付メニュー表示
-              showModalBottomSheet(
-                context: context,
-                shape: const RoundedRectangleBorder(
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-                ),
-                builder: (context) => _buildAttachmentMenu(context),
-              );
-            },
-          ),
-          Expanded(
-            child: Container(
-              decoration: BoxDecoration(
-                color: Colors.grey.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(24),
-                border: Border.all(
-                  color: AppTheme.primaryColor.withOpacity(0.3),
-                  width: 1,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.grey.withOpacity(0.05),
-                    blurRadius: 2,
-                    offset: const Offset(0, 1),
+    return RepaintBoundary(
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 8,
+              offset: const Offset(0, -2),
+            ),
+          ],
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            IconButton(
+              icon: const Icon(Icons.add_circle_outline),
+              color: AppTheme.primaryColor,
+              onPressed: () {
+                // ファイル添付メニュー表示
+                showModalBottomSheet(
+                  context: context,
+                  shape: const RoundedRectangleBorder(
+                    borderRadius: BorderRadius.vertical(
+                      top: Radius.circular(20),
+                    ),
                   ),
-                ],
-              ),
+                  builder: (context) => _buildAttachmentMenu(context),
+                );
+              },
+            ),
+            Expanded(
               child: TextField(
                 controller: _controller,
                 minLines: 1,
@@ -258,35 +245,35 @@ class _ChatInputFieldState extends State<ChatInputField> {
                 ),
               ),
             ),
-          ),
-          const SizedBox(width: 8),
-          AnimatedOpacity(
-            opacity: _showSendButton ? 1.0 : 0.5,
-            duration: const Duration(milliseconds: 200),
-            child: Container(
-              width: 42,
-              height: 42,
-              margin: const EdgeInsets.only(bottom: 4),
-              decoration: BoxDecoration(
-                color: AppTheme.primaryColor,
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: AppTheme.primaryColor.withOpacity(0.3),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: IconButton(
-                onPressed: _showSendButton ? _handleSend : null,
-                icon: const Icon(Icons.send_rounded),
-                color: Colors.white,
-                iconSize: 20,
+            const SizedBox(width: 8),
+            AnimatedOpacity(
+              opacity: _showSendButton ? 1.0 : 0.5,
+              duration: const Duration(milliseconds: 200),
+              child: Container(
+                width: 42,
+                height: 42,
+                margin: const EdgeInsets.only(bottom: 4),
+                decoration: BoxDecoration(
+                  color: AppTheme.primaryColor,
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppTheme.primaryColor.withOpacity(0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: IconButton(
+                  onPressed: _showSendButton ? _handleSend : null,
+                  icon: const Icon(Icons.send_rounded),
+                  color: Colors.white,
+                  iconSize: 20,
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

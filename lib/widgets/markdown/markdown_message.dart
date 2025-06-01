@@ -307,11 +307,8 @@ class _MarkdownMessageState extends State<MarkdownMessage> {
                                               color: AppTheme.textPrimary,
                                               height: 1.5,
                                             ),
-                                            onFinished: () {
-                                              setState(() {
-                                                _animationCompleted = true;
-                                              });
-                                            },
+                                            enableAnimation:
+                                                false, // アニメーションを無効化
                                           )
                                           : MarkdownMessageContent(
                                             text: _convertSuperscript(

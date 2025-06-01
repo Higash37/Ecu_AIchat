@@ -18,7 +18,7 @@ class LocalCacheService {
         final dir = await getApplicationDocumentsDirectory();
         Hive.init(dir.path);
       }
-      
+
       // アダプターの登録
       if (!Hive.isAdapterRegistered(0)) {
         Hive.registerAdapter(ChatAdapter());
@@ -26,7 +26,7 @@ class LocalCacheService {
       if (!Hive.isAdapterRegistered(1)) {
         Hive.registerAdapter(MessageAdapter());
       }
-      
+
       // Boxの初期化
       await Hive.openBox<Chat>(chatBoxName);
     }
@@ -41,14 +41,24 @@ class LocalCacheService {
     }
   }
 
-  static List<Chat> getCachedChats() {
+  static List<Chat>? _cachedChats;
+
+  static Future<List<Chat>> getCachedChats() async {
+    if (_cachedChats != null) {
+      return _cachedChats!;
+    }
     try {
-      final box = Hive.box<Chat>(chatBoxName);
-      return box.values.toList();
+      final box = await Hive.openBox<Chat>(chatBoxName);
+      _cachedChats = box.values.toList();
+      return _cachedChats!;
     } catch (e) {
       print('Hive cached_chats box error: $e');
       return [];
     }
+  }
+
+  static void clearCachedChats() {
+    _cachedChats = null;
   }
 
   // チャットごとのメッセージキャッシュ

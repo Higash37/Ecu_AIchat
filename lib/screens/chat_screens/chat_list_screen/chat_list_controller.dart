@@ -23,7 +23,7 @@ class ChatListController extends ChangeNotifier {
       final userId = user?['user_id'];
       if (userId == null) {
         // 未ログイン時はローカルキャッシュのみ
-        loadedChats = LocalCacheService.getCachedChats();
+        loadedChats = await LocalCacheService.getCachedChats();
         projectTitle = projectId != null ? 'プロジェクト内チャット' : 'すべてのチャット';
       } else {
         if ((projectId ?? '').isNotEmpty) {
@@ -49,9 +49,10 @@ class ChatListController extends ChangeNotifier {
       notifyListeners();
     } catch (e) {
       // 通信失敗時はキャッシュから取得
-      final cached = LocalCacheService.getCachedChats();
-      if (cached.isNotEmpty) {
-        chats = cached;
+      final cached = await LocalCacheService.getCachedChats();
+      final cachedChats = await cached;
+      if (cachedChats.isNotEmpty) {
+        chats = cachedChats;
         isLoading = false;
         notifyListeners();
         if (context.mounted) {

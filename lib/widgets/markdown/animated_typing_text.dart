@@ -5,12 +5,16 @@ class AnimatedTypingText extends StatefulWidget {
   final String text;
   final TextStyle style;
   final VoidCallback? onFinished;
+  final bool enableAnimation; // 新しいプロパティ
+
   const AnimatedTypingText({
     required this.text,
     required this.style,
     this.onFinished,
+    this.enableAnimation = true, // デフォルトでアニメーションを有効化
     super.key,
   });
+
   @override
   State<AnimatedTypingText> createState() => _AnimatedTypingTextState();
 }
@@ -18,10 +22,15 @@ class AnimatedTypingText extends StatefulWidget {
 class _AnimatedTypingTextState extends State<AnimatedTypingText> {
   String _displayText = '';
   Timer? _timer;
+
   @override
   void initState() {
     super.initState();
-    _startAnimation();
+    if (widget.enableAnimation) {
+      _startAnimation();
+    } else {
+      _displayText = widget.text; // アニメーションを無効化した場合、全テキストを即座に表示
+    }
   }
 
   void _startAnimation() {

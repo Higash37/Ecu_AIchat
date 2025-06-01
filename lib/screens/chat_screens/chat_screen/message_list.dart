@@ -135,37 +135,6 @@ class MessageList extends StatelessWidget {
                 color: AppTheme.primaryColor,
               ),
             ),
-            const SizedBox(width: 16),
-            Text(
-              'AIが回答を考えています...',
-              style: TextStyle(color: Colors.grey.shade800),
-            ),
-            const SizedBox(width: 16),
-            ElevatedButton.icon(
-              icon: const Icon(Icons.stop),
-              label: const Text('停止'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.redAccent,
-                foregroundColor: Colors.white,
-                minimumSize: const Size(60, 36),
-                padding: const EdgeInsets.symmetric(horizontal: 8),
-              ),
-              onPressed: () {
-                controller?.cancelGeneration();
-              },
-            ),
-            const SizedBox(width: 8),
-            OutlinedButton.icon(
-              icon: const Icon(Icons.refresh),
-              label: const Text('再生成'),
-              style: OutlinedButton.styleFrom(
-                minimumSize: const Size(60, 36),
-                padding: const EdgeInsets.symmetric(horizontal: 8),
-              ),
-              onPressed: () {
-                controller?.regenerateLastMessage(context);
-              },
-            ),
           ],
         ),
       ),

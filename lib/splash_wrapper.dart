@@ -5,48 +5,69 @@ import 'services/local_cache_service.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'env.dart';
 import 'package:uuid/uuid.dart';
+import 'models/chat.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class SplashWrapper extends StatelessWidget {
   const SplashWrapper({super.key});
 
-  Future<String> initializeApp() async {
-    String? guestSessionId;
-    try {
-      await Supabase.initialize(
+  Future<void> initializeSupabaseAndHive() async {
+    await Future.wait([
+      Supabase.initialize(
         url: AppConfig.supabaseUrl,
         anonKey: AppConfig.supabaseAnonKey,
-      );
-      
-      // Hiveの初期化は1回だけ行う
-      await LocalCacheService.init();
-      
-      // guest_sessionのBoxを開く
+      ),
+      LocalCacheService.init(),
+    ]);
+  }
+
+  Future<void> preloadCache() async {
+    await LocalCacheService.getCachedChats();
+  }
+
+  Future<void> setupFonts() async {
+    GoogleFonts.config.allowRuntimeFetching = false;
+  }
+
+  Future<void> initializeApp() async {
+    try {
+      // 非同期処理を分離して実行
+      await Future.wait([
+        initializeSupabaseAndHive(),
+        preloadCache(),
+        setupFonts(),
+      ]);
+
+      // ゲストセッションIDの取得と保存
       final box = await Hive.openBox('guest_session');
-      guestSessionId = box.get('guest_session_id');
+      String? guestSessionId = box.get('guest_session_id');
       if (guestSessionId == null) {
         guestSessionId = const Uuid().v4();
         await box.put('guest_session_id', guestSessionId);
       }
-      // guestSessionId を userInfo として保存
-      await LocalCacheService.saveGuestUserInfo(guestSessionId);
+      LocalCacheService.saveGuestUserInfo(guestSessionId);
     } catch (e) {
       print('初期化失敗: $e');
-      guestSessionId = const Uuid().v4();
-      // エラー時も最低限 userInfo を保存
-      await LocalCacheService.saveGuestUserInfo(guestSessionId);
     }
-    return guestSessionId;
   }
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<String>(
-      future: initializeApp(),
+    // 初期化を非同期で実行しつつ、画面を即座に表示
+    initializeApp();
+
+    return FutureBuilder<List<Chat>>(
+      future: LocalCacheService.getCachedChats(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.done) {
-          // nullチェックを厳密に行う
-          final chatId = snapshot.data ?? const Uuid().v4();
-          return ChatScreen(chatId: chatId, projectId: '');
+          final List<Chat> cachedChats = snapshot.data ?? [];
+          return ChatScreen(
+            chatId:
+                cachedChats.isNotEmpty
+                    ? cachedChats.first.id
+                    : const Uuid().v4(),
+            projectId: '',
+          );
         } else {
           return const Center(child: CircularProgressIndicator());
         }

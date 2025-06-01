@@ -28,12 +28,13 @@ class AppDrawerController extends ChangeNotifier {
       final userId = user?['user_id'] ?? '';
       final allChats = await _chatService.fetchAllChats(userId);
       await LocalCacheService.cacheChats(allChats);
-      _recentChats = allChats.take(10).toList();
+      final cachedChats = await LocalCacheService.getCachedChats();
+      _recentChats = cachedChats.take(10).toList();
       _isLoading = false;
       notifyListeners();
     } catch (e) {
-      final cached = LocalCacheService.getCachedChats();
-      _recentChats = cached.take(10).toList();
+      final cachedChats = await LocalCacheService.getCachedChats();
+      _recentChats = cachedChats.take(10).toList();
       _isLoading = false;
       notifyListeners();
     }
