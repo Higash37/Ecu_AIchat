@@ -71,7 +71,16 @@ flutter:
   uses-material-design: true
   # To add assets to your application, add an assets section, like this:
   assets:
-    - assets/fonts/
+    - assets/fonts/Noto_Sans_JP,Zen_Maru_Gothic/Noto_Sans_JP/static/NotoSansJP-Regular.ttf
+    - assets/fonts/Noto_Sans_JP,Zen_Maru_Gothic/Noto_Sans_JP/static/NotoSansJP-Bold.ttf
+    - assets/fonts/Noto_Sans_JP,Zen_Maru_Gothic/Noto_Sans_JP/static/NotoSansJP-SemiBold.ttf
+    - assets/fonts/JetBrains_Mono,Noto_Sans/JetBrains_Mono/static/JetBrainsMono-Regular.ttf
+    - assets/fonts/JetBrains_Mono,Noto_Sans/Noto_Sans/static/NotoSans-Italic.ttf
+    - assets/fonts/JetBrains_Mono,Noto_Sans/Noto_Sans/static/NotoSans-Regular.ttf
+    - assets/fonts/JetBrains_Mono,Noto_Sans/Noto_Sans/static/NotoSans-SemiBold.ttf
+    - assets/fonts/JetBrains_Mono,Noto_Sans/Noto_Sans/static/NotoSans-Bold.ttf
+    - assets/fonts/JetBrains_Mono,Noto_Sans/Noto_Sans/static/NotoSans-Black.ttf
+    - assets/fonts/JetBrains_Mono,Noto_Sans/Noto_Sans/static/NotoSans-ExtraBold.ttf
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

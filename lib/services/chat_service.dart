@@ -1,4 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import '../models/chat.dart';
 
 class ChatService {
@@ -76,12 +78,13 @@ class ChatService {
   // チャットの存在確認
   Future<bool> checkIfChatExists(String chatId, String userId) async {
     try {
-      final response = await supabase
-          .from('chats')
-          .select('id')
-          .eq('id', chatId)
-          .eq('user_id', userId)
-          .maybeSingle();
+      final response =
+          await supabase
+              .from('chats')
+              .select('id')
+              .eq('id', chatId)
+              .eq('user_id', userId)
+              .maybeSingle();
       return response != null;
     } catch (e) {
       print('チャット存在確認エラー: $e');
@@ -153,5 +156,21 @@ class ChatService {
   // チャットの削除
   Future<void> deleteChat(String chatId) async {
     await supabase.from('chats').delete().eq('id', chatId);
+  }
+
+  Future<String> generateChatTitle(String chatId, String initialMessage) async {
+    // バックエンドのエンドポイントを呼び出してタイトルを生成
+    final response = await http.post(
+      Uri.parse('http://localhost:8000/generate_title'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'chat_id': chatId, 'initial_message': initialMessage}),
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return data['title'] ?? 'Untitled';
+    } else {
+      throw Exception('Failed to generate chat title: ${response.body}');
+    }
   }
 }

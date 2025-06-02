@@ -259,4 +259,27 @@ class ChatDetailController extends ChangeNotifier {
     messages.clear();
     notifyListeners();
   }
+
+  Future<void> initializeChatTitle(String initialMessage) async {
+    if (chat == null) return;
+    try {
+      final title = await _chatService.generateChatTitle(
+        chatId,
+        initialMessage,
+      );
+      await _chatService.updateChatTitle(chatId, title);
+      chat = Chat(
+        id: chat?.id ?? '',
+        projectId: chat?.projectId,
+        title: title,
+        createdAt: chat?.createdAt ?? DateTime.now(),
+        updatedAt: chat?.updatedAt,
+        lastMessage: chat?.lastMessage,
+        messageCount: chat?.messageCount,
+        userId: chat?.userId,
+      );
+    } catch (e) {
+      print('タイトル生成に失敗しました: $e');
+    }
+  }
 }
