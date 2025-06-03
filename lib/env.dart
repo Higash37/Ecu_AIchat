@@ -3,11 +3,11 @@
 class AppConfig {
   // 開発中はtrueに設定し、公開時にはfalseに変更
   static const bool isLocal = false;
-  // APIのベースURL：ローカル開発時とFly.ioデプロイ時で切り替え
+  // APIのベースURL：ローカル開発時とデプロイ時で切り替え
   static String get apiBaseUrl =>
       isLocal
           ? "http://localhost:8000" // ローカル開発環境
-          : "https://ai-edu-api.fly.dev"; // Fly.io公開環境
+          : "https://aiedu-backend.onrender.com"; // 公開環境
 
   // 環境名（デバッグ用）
   static String get envName => isLocal ? "開発環境" : "公開環境";

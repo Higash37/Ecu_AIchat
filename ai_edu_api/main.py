@@ -18,7 +18,7 @@ app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "*",  # 全てのローカルホストURLを許可
+        "*", 
         "https://ecu-a-ichat-dvsd.vercel.app",  # メインURL
         "https://ecu-aichat-frontend.onrender.com",  # RenderデプロイURL
         "https://ecu-a-ichat-dvsd-git-main-higash37s-projects.vercel.app",  # ブランチURL
@@ -37,9 +37,6 @@ SUPABASE_URL = os.environ.get("SUPABASE_URL")
 SUPABASE_KEY = os.environ.get("SUPABASE_ANON_KEY")
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-print(f"[デバッグ] Supabaseクライアントの状態: URL={SUPABASE_URL}, KEY={SUPABASE_KEY}")
-
-
 # --- 独自AIエージェント: DBやOpenAIの裏で“住み着く”知識グラフ・推論エンジン ---
 class ResidentAIAgent:
     def __init__(self):
@@ -56,21 +53,12 @@ class ResidentAIAgent:
             time.sleep(60)  # 1分ごとに知識グラフを更新
 
     def update_knowledge(self):
+        # TODO: SupabaseやDBから全ユーザーのチャット履歴・頻度・時間帯・速度などを取得
+        # 例: self.user_profiles[user_id] = {"性格": ..., "傾向": ..., "感情履歴": ...}
         try:
-            # Supabaseからデータを取得
-            response = supabase.table("chat_history").select("*").execute()
-            if response.data:
-                for record in response.data:
-                    user_id = record.get("user_id")
-                    if user_id not in self.user_profiles:
-                        self.user_profiles[user_id] = {"性格": [], "傾向": [], "感情履歴": []}
-                    # データを解析してプロファイルに追加
-                    self.user_profiles[user_id]["感情履歴"].append(record.get("emotion"))
-
-            print("[ResidentAIAgent] ユーザープロファイル・知識グラフを自動更新しました")
+            print("[ResidentAIAgent] 知識グラフの更新はスキップされました: chat_history テーブルが存在しません。")
         except Exception as e:
             print(f"[ResidentAIAgent] 知識グラフの更新中にエラーが発生しました: {e}")
-
         self.last_update = time.time()
 
     def analyze_user(self, user_id, chat_history):
@@ -104,6 +92,122 @@ async def health_check():
     """
     return {"status": "ok", "message": "API is running"}
 
+def generate_problem_prompt(
+    user_profile=None,
+    quiz_type="multiple_choice",
+    level="英検2級",
+    tags=None,
+    layout="quiz_card_v1",
+    count=1
+):
+    profile_context = ""
+    if user_profile:
+        profile_context += (
+            f"このユーザーは「{user_profile.get('性格', '未知')}」な性格で、"
+            f"「{user_profile.get('傾向', '不明')}」な傾向があります。\n"
+        )
+    tags_text = ", ".join(tags) if tags else "一般的な文法・語彙"
+    prompt = {
+        "role": "system",
+        "content": (
+            f"{profile_context}"
+            f"あなたは教育AIです。以下の条件で **{count}問** の問題を出題してください。\n"
+            f"- 出題タイプ: {quiz_type}\n"
+            f"- 難易度: {level}\n"
+            f"- 出題範囲: {tags_text}\n"
+            f"- レイアウトテンプレート: {layout}\n\n"
+            "【出題ルール】\n"
+            "1. 各問題には文脈・応用・誤答誘導を含めること。\n"
+            "2. 出力形式は以下のJSON配列として返すこと：\n"
+            "[\n"
+            "  {\n"
+            "    \"type\": \"multiple_choice\",\n"
+            "    \"layout\": \"quiz_card_v1\",\n"
+            "    \"title\": \"前置詞の使い分け\",\n"
+            "    \"question\": \"...\",\n"
+            "    \"options\": [\"...\", \"...\", \"...\", \"...\"],\n"
+            "    \"answer\": \"...\",\n"
+            "    \"explanation\": \"...\",\n"
+            "    \"difficulty\": \"英検2級\",\n"
+            "    \"tags\": [\"to不定詞\", \"前置詞\"]\n"
+            "  }, ...\n"
+            "]"
+        )
+    }
+    return prompt
+
+@app.post("/chat")
+async def chat(request: Request):
+    data = await request.json()
+    messages = data.get("messages", [])
+    mode = data.get("mode", "normal")
+    model = data.get("model", "gpt-4o")
+    user_id = data.get("user_id", None)
+    question = messages[-1]["content"] if messages else ""
+    context = json.dumps(messages[:-1]) if len(messages) > 1 else None
+    quiz_type = data.get("quiz_type") or "multiple_choice"
+    level = data.get("level") or "英検2級"
+    tags = data.get("tags") or []
+    layout = data.get("layout") or "quiz_card_v1"
+    count = int(data.get("count", 1))
+
+    # --- 出題意図の自動分類・プロファイル連携 ---
+    user_profile = resident_ai.user_profiles.get(user_id)
+    if any(x in question for x in ["問題生成", "問題を作って", "quiz", "問題を出して", "問題作成", "問題を自動生成"]):
+        system_prompt = generate_problem_prompt(
+            user_profile=user_profile,
+            quiz_type=quiz_type,
+            level=level,
+            tags=tags,
+            layout=layout,
+            count=count
+        )
+    else:
+        system_prompt = {
+            "role": "system",
+            "content": "あなたは教育AIアシスタントです。ユーザーの発言やAIの返答の感情を一言でラベル化してください（例: ポジティブ, ネガティブ, 喜び, 怒り, 驚き, 悲しみ, ニュートラル など）。返答と感情ラベルをJSON形式で返してください。例: {\"reply\": \"...\", \"emotion\": \"ポジティブ\"}"
+        }
+    full_messages = [system_prompt] + messages
+
+    # --- ResidentAIによる独自発想・仮説生成 ---
+    creative_result = None
+    if mode == "creative":
+        creative_result = resident_ai.creative_thinking(messages[-1]["content"] if messages else "", full_messages)
+
+    if model == "higash-ai":
+        # ResidentAIのみで応答
+        # ユーザーのプロファイルを更新
+        if user_id:
+            # TODO: 実際はDBから履歴取得
+            resident_ai.analyze_user(user_id, messages)
+        creative_result = resident_ai.creative_thinking(messages[-1]["content"] if messages else "", full_messages, user_id=user_id)
+        reply = creative_result["idea"] if creative_result and "idea" in creative_result else "ResidentAI: 準備中です。"
+        emotion = "ニュートラル"
+        return JSONResponse(content={
+            "reply": reply,
+            "emotion": emotion,
+            "creative": creative_result
+        }, media_type="application/json; charset=utf-8")
+    else:
+        # 通常のOpenAI（gpt-4o等）
+        response = client.chat.completions.create(
+            model=model,
+            messages=full_messages,
+            response_format={"type": "json_object"}
+        )
+        try:
+            result = json.loads(response.choices[0].message.content)
+            reply = result.get("reply", "")
+            emotion = result.get("emotion", "ニュートラル")
+        except Exception:
+            reply = response.choices[0].message.content
+            emotion = "ニュートラル"
+        print("GPT reply:", reply, "emotion:", emotion)
+        return JSONResponse(content={
+            "reply": reply,
+            "emotion": emotion,
+            "creative": creative_result
+        }, media_type="application/json; charset=utf-8")
 
 @app.post("/chat/stream")
 async def chat_stream(request: Request):
@@ -123,28 +227,3 @@ async def chat_stream(request: Request):
         yield "data: [DONE]\n\n"
 
     return StreamingResponse(event_stream(), media_type="text/event-stream")
-
-@app.post("/generate_title")
-async def generate_title(request: Request):
-    data = await request.json()
-    initial_message = data.get("initial_message", "")
-
-    if not initial_message:
-        return JSONResponse(content={"error": "Initial message is required."}, status_code=400)
-
-    # OpenAI APIを使用してタイトルを生成
-    response = client.chat.completions.create(
-        model="gpt-4o",
-        messages=[
-            {"role": "user", "content": f"以下のメッセージに基づいてチャットのタイトルを生成してください: {initial_message}"}
-        ],
-        max_tokens=10
-    )
-    title = response.choices[0].message.content.strip()
-
-    # Supabaseにタイトルを保存
-    chat_id = data.get("chat_id")
-    if chat_id:
-        supabase.table("chats").update({"title": title}).eq("id", chat_id).execute()
-
-    return JSONResponse(content={"title": title}, status_code=200)

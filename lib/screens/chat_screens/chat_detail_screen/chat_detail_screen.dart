@@ -36,7 +36,6 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
       initialChat: widget.prefetchedChat ?? widget.chat,
     );
     _controller!.addListener(_onControllerChanged);
-    _controller!.initializeChatTitle('初期メッセージをここに設定');
   }
 
   @override

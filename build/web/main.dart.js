@@ -52139,7 +52139,7 @@ return A.x($async$u7,r)},
 E_(a){return this.auK(a)},
 auK(a){var s=0,r=A.y(t.a),q,p=this,o,n,m,l
 var $async$E_=A.u(function(b,c){if(b===1)return A.v(c,r)
-while(true)switch(s){case 0:o=A.eM("https://ai-edu-api.fly.dev/chat",0,null)
+while(true)switch(s){case 0:o=A.eM("https://aiedu-backend.onrender.com/chat",0,null)
 n=t.N
 m=A.a9(["Content-Type","application/json"],n,n)
 s=3
