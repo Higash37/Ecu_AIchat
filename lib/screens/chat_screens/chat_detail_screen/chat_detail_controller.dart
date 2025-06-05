@@ -221,7 +221,11 @@ class ChatDetailController extends ChangeNotifier {
     final response = await http.post(
       uri,
       headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({"messages": messagesForAI}),
+      body: jsonEncode({
+        "messages": messagesForAI,
+        "chat_id": chatId,
+        "user_id": userId,
+      }),
     );
     if (response.statusCode != 200) {
       throw Exception('API error: ${response.statusCode}');

@@ -136,5 +136,7 @@ flutter:
         - asset: assets/fonts/Noto_Serif_JP/static/NotoSerifJP-Black.ttf
           weight: 900
 
-  # For details regarding fonts from package dependencies,
-  # see https://flutter.dev/to/font-from-package
+    - family: NotoSans
+      fonts:
+        - asset: assets/fonts/JetBrains_Mono,Noto_Sans/Noto_Sans/static/NotoSans-Regular.ttf
+        - asset: assets/fonts/JetBrains_Mono,Noto_Sans/Noto_Sans/static/NotoSans-Italic.ttf

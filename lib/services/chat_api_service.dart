@@ -1,7 +1,9 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
+import 'package:uuid/uuid.dart';
 import '../env.dart';
+import '../services/local_cache_service.dart';
 
 /// チャットAPI通信を処理するサービス
 class ChatApiService {
@@ -9,19 +11,50 @@ class ChatApiService {
   static Future<Map<String, dynamic>> sendChatMessage({
     required String message,
     required String modelName,
+    required String chatId,
+    String? userId,
     List<Map<String, String>>? previousMessages,
+    String mode = "normal",
+    String quizType = "multiple_choice",
+    String level = "中級",
+    List<String>? tags,
+    String layout = "quiz_card_v1",
+    int count = 1,
   }) async {
     try {
       final uri = Uri.parse('${AppConfig.apiBaseUrl}/chat');
+
+      // Generate user_id if not provided
+      final userInfo = await LocalCacheService.getUserInfo();
+      userId ??= userInfo?['user_id'];
+      if (userId == null || userId.isEmpty) {
+        userId = const Uuid().v4();
+        await LocalCacheService.saveUserInfo(userId, 'guest');
+      }
 
       // メッセージ履歴の構築
       final messagesList = previousMessages ?? [];
       messagesList.add({"role": "user", "content": message});
 
+      final payload = {
+        "chat_id": chatId,
+        "user_id": userId,
+        "messages": messagesList,
+        "model": modelName,
+        "mode": mode,
+        "quiz_type": quizType,
+        "level": level,
+        "tags": tags ?? [],
+        "layout": layout,
+        "count": count,
+      };
+
+      debugPrint('Sending payload: $payload');
+
       final response = await http.post(
         uri,
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({"messages": messagesList, "model": modelName}),
+        body: jsonEncode(payload),
       );
 
       if (response.statusCode != 200) {

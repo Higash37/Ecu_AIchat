@@ -230,15 +230,19 @@ class ChatScreenController extends ChangeNotifier {
 
   // OpenAI APIへリクエスト
   Future<Map<String, dynamic>> _sendChatRequest(String message) async {
+    final user = await LocalCacheService.getUserInfo();
+    final userId = user?['user_id'] ?? '';
+
     final uri = Uri.parse('${AppConfig.apiBaseUrl}/chat');
     final response = await http.post(
       uri,
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
         "messages": [
-          {"role": "user", "content": message},
+          {"role": "user", "content": message, "chat_id": chatId},
         ],
         "model": _selectedModel,
+        "user_id": userId,
       }),
     );
     if (response.statusCode != 200) {

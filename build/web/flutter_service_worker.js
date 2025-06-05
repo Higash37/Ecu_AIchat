@@ -3,9 +3,11 @@ const MANIFEST = 'flutter-app-manifest';
 const TEMP = 'flutter-temp-cache';
 const CACHE_NAME = 'flutter-app-cache';
 
-const RESOURCES = {"assets/AssetManifest.bin": "6ae1a9d9d3c6e6cb509a1694b1a3c5f3",
-"assets/AssetManifest.bin.json": "6af3372158177c9e862af1ae8a3abb96",
-"assets/AssetManifest.json": "6715df0bb6810dd779eee79c97fd981d",
+const RESOURCES = {"assets/AssetManifest.bin": "f8c08877cc393ed4544cfe94fe05a0eb",
+"assets/AssetManifest.bin.json": "ca1bd964f3c8c2436ebcaf0733eb960e",
+"assets/AssetManifest.json": "41cfa34e6fb0e573dc020abb9cb6e210",
+"assets/assets/fonts/JetBrains_Mono,Noto_Sans/Noto_Sans/static/NotoSans-Italic.ttf": "a6d070775dd5e6bfff61870528c6248a",
+"assets/assets/fonts/JetBrains_Mono,Noto_Sans/Noto_Sans/static/NotoSans-Regular.ttf": "f46b08cc90d994b34b647ae24c46d504",
 "assets/assets/fonts/Noto_Sans_JP,Zen_Maru_Gothic/Noto_Sans_JP/static/NotoSansJP-Black.ttf": "c7cf13f6288ece850a978a0cfa764cd4",
 "assets/assets/fonts/Noto_Sans_JP,Zen_Maru_Gothic/Noto_Sans_JP/static/NotoSansJP-Bold.ttf": "1bdb5bf9e923e1bc6418342bcf6fb3e0",
 "assets/assets/fonts/Noto_Sans_JP,Zen_Maru_Gothic/Noto_Sans_JP/static/NotoSansJP-ExtraBold.ttf": "a4f1e854cd8a6816fccea648d4b1b7ac",
@@ -28,7 +30,7 @@ const RESOURCES = {"assets/AssetManifest.bin": "6ae1a9d9d3c6e6cb509a1694b1a3c5f3
 "assets/assets/fonts/Noto_Serif_JP/static/NotoSerifJP-Medium.ttf": "3b911933a923a4f7890b3370dcac405b",
 "assets/assets/fonts/Noto_Serif_JP/static/NotoSerifJP-Regular.ttf": "4f85eb828784848a144bbf90a563c029",
 "assets/assets/fonts/Noto_Serif_JP/static/NotoSerifJP-SemiBold.ttf": "aa8b447e18810e7add83815d5d77758c",
-"assets/FontManifest.json": "6ccc7410c605ff5ce67af58342792c19",
+"assets/FontManifest.json": "ed793a99c2e7c7543e2a3d5a53b6f487",
 "assets/fonts/MaterialIcons-Regular.otf": "db20c27dbb640166824c4b7049e6ab72",
 "assets/NOTICES": "49bcf0590ed07bc979c35f0050caa6a8",
 "assets/shaders/ink_sparkle.frag": "ecc85a2e95f5e9f53123dcaf8cb9b6ce",
@@ -46,7 +48,7 @@ const RESOURCES = {"assets/AssetManifest.bin": "6ae1a9d9d3c6e6cb509a1694b1a3c5f3
 "canvaskit/skwasm_st.wasm": "56c3973560dfcbf28ce47cebe40f3206",
 "favicon.png": "5dcef449791fa27946b3d35ad8803796",
 "flutter.js": "76f08d47ff9f5715220992f993002504",
-"flutter_bootstrap.js": "d54e6a1b50256d7b2a6755a6116d05e7",
+"flutter_bootstrap.js": "a767d08f87b7bf329e1a4625f5be1b00",
 "icons/icon_192x192.png": "c0b3a570db3cb131a8e2e43f8d8f33d8",
 "icons/icon_512x512.png": "fccf65bb532f9a5ec2fd376cdda3d20b",
 "icons/icon_favicon_32x32.png": "592eae52353b7a617b62b9e639c00ae5",
@@ -54,7 +56,7 @@ const RESOURCES = {"assets/AssetManifest.bin": "6ae1a9d9d3c6e6cb509a1694b1a3c5f3
 "icons/icon_maskable_512x512.png": "fb0aff6ee09c11075f517354336f0ddb",
 "index.html": "f3a69cf8a2a0c7d25f7c8284095dc9d5",
 "/": "f3a69cf8a2a0c7d25f7c8284095dc9d5",
-"main.dart.js": "e1c6438213ba6f4c56247bf01c643fff",
+"main.dart.js": "888b76986ac4f4486c9bcb1e5d3a2acc",
 "manifest.json": "ea197ed02e0876385319057f992bb02b",
 "version.json": "97144a1d275b1db8d6ea25235fd71288"};
 // The application shell files that are downloaded before a service worker can
