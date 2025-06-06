@@ -1,5 +1,5 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../services-model/chat.dart';
+import '../app_services/services-model/chat.dart';
 
 class ChatService {
   final supabase = Supabase.instance.client;

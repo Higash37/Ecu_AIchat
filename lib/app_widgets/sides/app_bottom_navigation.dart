@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
-import '../../supabase_ui/project_screens/project_list_screen/project_list_screen.dart';
 import '../../supabase_ui/chat_screens/chat_list_screen/chat_list_screen.dart';
 import '../../supabase_ui/chat_screens/chat_screen/chat_screen.dart';
-import '../../supabase_ui/tag_screens/tag_list_screen/tag_list_screen.dart';
 
 class AppBottomNavigation extends StatelessWidget {
   final int currentIndex;
@@ -41,9 +39,6 @@ class AppBottomNavigation extends StatelessWidget {
 
             Widget screen;
             switch (index) {
-              case 0:
-                screen = const ProjectListScreen();
-                break;
               case 1:
                 screen = const ChatListScreen();
                 break;
@@ -52,11 +47,6 @@ class AppBottomNavigation extends StatelessWidget {
                   chatId: Uuid().v4(),
                   projectId: '', // 空文字で渡す
                 ); // projectIdも渡す
-                break;
-              case 3:
-                // TagListScreenはprojectIdを必要とするため、プロジェクトIDがないとエラーになる
-                // 仮のプロジェクトIDを使用して画面を表示（本来はプロジェクト選択UIを表示すべき）
-                screen = TagListScreen(projectId: ''); // 空文字で渡す
                 break;
               default:
                 return;
@@ -72,11 +62,6 @@ class AppBottomNavigation extends StatelessWidget {
           },
           items: const [
             BottomNavigationBarItem(
-              icon: Icon(Icons.folder_outlined),
-              activeIcon: Icon(Icons.folder),
-              label: 'プロジェクト',
-            ),
-            BottomNavigationBarItem(
               icon: Icon(Icons.chat_bubble_outline),
               activeIcon: Icon(Icons.chat_bubble),
               label: 'チャット履歴',
@@ -85,11 +70,6 @@ class AppBottomNavigation extends StatelessWidget {
               icon: Icon(Icons.chat),
               activeIcon: Icon(Icons.chat_rounded),
               label: '新規チャット',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.tag_outlined),
-              activeIcon: Icon(Icons.tag),
-              label: 'タグ',
             ),
           ],
         ),

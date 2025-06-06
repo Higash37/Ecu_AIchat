@@ -4,7 +4,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_chat_types/flutter_chat_types.dart' as types;
 import 'package:animated_text_kit/animated_text_kit.dart';
 import '../../app_styles/app_theme.dart';
-import '../../ai_ui/quiz.dart';
 import '../pdf/pdf_preview_screen.dart';
 import '../../app_utils/markdown_symbol_utils.dart';
 import 'markdown_message_header.dart';
@@ -12,7 +11,6 @@ import 'markdown_message_action_buttons.dart';
 import 'markdown_message_content.dart';
 import 'reasoning_expandable.dart';
 import 'knowledge_graph_mini_view.dart';
-import 'animated_typing_text.dart';
 
 class MarkdownMessage extends StatefulWidget {
   final types.TextMessage message;
@@ -30,8 +28,6 @@ class MarkdownMessage extends StatefulWidget {
 
 class _MarkdownMessageState extends State<MarkdownMessage> {
   bool _animationCompleted = false;
-  final List<Quiz> _quizzes = [];
-  String? _currentEmotion;
 
   @override
   void initState() {
@@ -53,38 +49,12 @@ class _MarkdownMessageState extends State<MarkdownMessage> {
       });
     } else {
       _animationCompleted = true;
-    } // AIメッセージの場合、クイズを生成
-    /* 一時的にクイズ機能を無効化
-    if (!widget.isUserMessage) {
-      _quizzes.addAll(
-        QuizGenerator.generateQuizzesFromMessage(widget.message.text),
-      );
     }
-    */
-    _currentEmotion =
-        (widget.message.metadata != null &&
-                widget.message.metadata is Map &&
-                (widget.message.metadata as Map).containsKey('emotion') &&
-                (widget.message.metadata as Map)['emotion'] != null)
-            ? (widget.message.metadata as Map)['emotion'] as String
-            : null;
   }
 
   @override
   void didUpdateWidget(covariant MarkdownMessage oldWidget) {
     super.didUpdateWidget(oldWidget);
-    final newEmotion =
-        (widget.message.metadata != null &&
-                widget.message.metadata is Map &&
-                (widget.message.metadata as Map).containsKey('emotion') &&
-                (widget.message.metadata as Map)['emotion'] != null)
-            ? (widget.message.metadata as Map)['emotion'] as String
-            : null;
-    if (newEmotion != _currentEmotion) {
-      setState(() {
-        _currentEmotion = newEmotion;
-      });
-    }
   }
 
   // 理系・古字・上付き・下付き・ギリシャ文字・記号などの変換
@@ -116,13 +86,9 @@ class _MarkdownMessageState extends State<MarkdownMessage> {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        // PCとタブレット用の条件（画面幅が広い場合）
         final isWideScreen = constraints.maxWidth > 600;
         final contentWidth =
-            isWideScreen
-                ? constraints.maxWidth *
-                    0.7 // 画面幅の70%
-                : constraints.maxWidth; // スマホでは全幅
+            isWideScreen ? constraints.maxWidth * 0.7 : constraints.maxWidth;
 
         return Align(
           alignment:
@@ -287,7 +253,6 @@ class _MarkdownMessageState extends State<MarkdownMessage> {
                                             isUserMessage: widget.isUserMessage,
                                             animationCompleted:
                                                 _animationCompleted,
-                                            quizzes: _quizzes,
                                           ),
                                 )
                                 : Padding(
@@ -297,18 +262,32 @@ class _MarkdownMessageState extends State<MarkdownMessage> {
                                   child:
                                       (!widget.isUserMessage &&
                                               !_animationCompleted)
-                                          ? AnimatedTypingText(
-                                            text: _convertSuperscript(
-                                              widget.message.text,
-                                            ),
-                                            style: const TextStyle(
-                                              fontFamily: 'NotoSansJP',
-                                              fontSize: 15.0,
-                                              color: AppTheme.textPrimary,
-                                              height: 1.5,
-                                            ),
-                                            enableAnimation:
-                                                false, // アニメーションを無効化
+                                          ? AnimatedTextKit(
+                                            isRepeatingAnimation: false,
+                                            totalRepeatCount: 1,
+                                            displayFullTextOnTap: true,
+                                            stopPauseOnTap: true,
+                                            onFinished: () {
+                                              setState(() {
+                                                _animationCompleted = true;
+                                              });
+                                            },
+                                            animatedTexts: [
+                                              TypewriterAnimatedText(
+                                                _convertSuperscript(
+                                                  widget.message.text,
+                                                ),
+                                                textStyle: const TextStyle(
+                                                  fontFamily: 'NotoSansJP',
+                                                  fontSize: 15.0,
+                                                  color: AppTheme.textPrimary,
+                                                  height: 1.5,
+                                                ),
+                                                speed: const Duration(
+                                                  milliseconds: 30,
+                                                ),
+                                              ),
+                                            ],
                                           )
                                           : MarkdownMessageContent(
                                             text: _convertSuperscript(
@@ -317,7 +296,6 @@ class _MarkdownMessageState extends State<MarkdownMessage> {
                                             isUserMessage: widget.isUserMessage,
                                             animationCompleted:
                                                 _animationCompleted,
-                                            quizzes: _quizzes,
                                           ),
                                 ),
                       ),
@@ -340,7 +318,10 @@ class _MarkdownMessageState extends State<MarkdownMessage> {
                   ),
 
                   // 感情アイコン表示
-                  if (!widget.isUserMessage && _currentEmotion != null)
+                  if (!widget.isUserMessage &&
+                      widget.message.metadata != null &&
+                      widget.message.metadata is Map &&
+                      (widget.message.metadata as Map).containsKey('emotion'))
                     AnimatedContainer(
                       duration: const Duration(milliseconds: 400),
                       curve: Curves.easeOutBack,
@@ -351,7 +332,7 @@ class _MarkdownMessageState extends State<MarkdownMessage> {
                             duration: const Duration(milliseconds: 400),
                             transitionBuilder: (child, anim) {
                               // 感情ごとにアニメーション切替
-                              switch (_currentEmotion) {
+                              switch (widget.message.metadata!['emotion']) {
                                 case '喜び':
                                   return ScaleTransition(
                                     scale: anim,
@@ -375,21 +356,29 @@ class _MarkdownMessageState extends State<MarkdownMessage> {
                               }
                             },
                             child: Icon(
-                              emotionIconMap[_currentEmotion] ??
+                              emotionIconMap[widget
+                                      .message
+                                      .metadata!['emotion']] ??
                                   Icons.sentiment_satisfied,
                               color:
-                                  emotionColorMap[_currentEmotion] ??
+                                  emotionColorMap[widget
+                                      .message
+                                      .metadata!['emotion']] ??
                                   Colors.grey,
                               size: 22,
-                              key: ValueKey(_currentEmotion),
+                              key: ValueKey(
+                                widget.message.metadata!['emotion'],
+                              ),
                             ),
                           ),
                           const SizedBox(width: 6),
                           Text(
-                            _currentEmotion ?? '',
+                            widget.message.metadata!['emotion'] ?? '',
                             style: TextStyle(
                               color:
-                                  emotionColorMap[_currentEmotion] ??
+                                  emotionColorMap[widget
+                                      .message
+                                      .metadata!['emotion']] ??
                                   Colors.grey,
                               fontSize: 13,
                               fontWeight: FontWeight.bold,

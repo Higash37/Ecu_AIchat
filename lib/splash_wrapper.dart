@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'supabase_ui/chat_screens/chat_screen/chat_screen.dart';
-import 'app_services/services/cache/local_cache_service.dart';
+import 'app_services/services/local_cache_service.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'env.dart';
 import 'package:uuid/uuid.dart';

@@ -2,8 +2,8 @@ import 'package:flutter/foundation.dart';
 import 'package:hive/hive.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:path_provider/path_provider.dart';
-import '../../services-model/chat.dart';
-import '../../services-model/message.dart';
+import '../services-model/chat.dart';
+import '../services-model/message.dart';
 
 class LocalCacheService {
   static const String chatBoxName = 'cached_chats';

@@ -6,9 +6,9 @@ import 'package:http/http.dart' as http;
 import 'package:characters/characters.dart';
 import '../../../app_services/services-model/chat.dart';
 import '../../../app_services/services-model/message.dart' as app_models;
-import '../../../app_services/services/services-chat/chat_service.dart';
+import '../../../ai_logic/chat_service.dart';
 import '../../../app_services/services/message_service.dart';
-import '../../../app_services/services/cache/local_cache_service.dart';
+import '../../../app_services/services/local_cache_service.dart';
 import '../../../env.dart';
 
 /// ChatDetailScreenのロジック・状態管理用コントローラー

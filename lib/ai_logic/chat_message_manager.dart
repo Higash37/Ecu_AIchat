@@ -1,6 +1,6 @@
 import 'package:flutter_chat_types/flutter_chat_types.dart' as types;
 import 'package:uuid/uuid.dart';
-import '../../services-model/message.dart';
+import '../app_services/services-model/message.dart';
 
 /// チャットメッセージを管理するユーティリティクラス
 class ChatMessageManager {

@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
 import '../../../app_styles/app_theme.dart';
 import '../../../app_widgets/sides/drawer/app_scaffold.dart';
-import '../../../app_widgets/chat/chat_input_field.dart';
+import '../../../ai_logic/chat_input_field.dart';
 import 'chat_screen_controller.dart';
-import '../../../ai_ui/selector.dart';
+import '../../../ai_logic/selector.dart';
 import 'message_list.dart';
 import 'chat_options_menu.dart';
 

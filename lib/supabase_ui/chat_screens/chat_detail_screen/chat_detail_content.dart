@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_chat_types/flutter_chat_types.dart' as types;
 import '../../../app_styles/app_theme.dart';
 import '../../../app_widgets/markdown/markdown_message.dart';
-import '../../../app_widgets/chat/chat_input_field.dart';
+import '../../../ai_logic/chat_input_field.dart';
 
 class ChatDetailContent extends StatelessWidget {
   final List<types.Message> messages;

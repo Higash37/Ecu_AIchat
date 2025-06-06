@@ -5,12 +5,12 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter/services.dart';
 import '../../../app_services/services/message_service.dart';
-import '../../../app_services/services/services-chat/chat_service.dart';
-import '../../../app_services/services/cache/local_cache_service.dart';
+import '../../../ai_logic/chat_service.dart';
+import '../../../app_services/services/local_cache_service.dart';
 import '../../../app_services/services-model/message.dart';
 import '../../../app_services/services-model/chat.dart';
 import '../../../env.dart';
-import '../../../app_services/services/services-chat/chat_message_manager.dart';
+import '../../../ai_logic/chat_message_manager.dart';
 
 /// ChatScreenのロジック・状態管理用コントローラー
 class ChatScreenController extends ChangeNotifier {

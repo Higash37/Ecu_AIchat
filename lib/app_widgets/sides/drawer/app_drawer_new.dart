@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
-import '../../../supabase_ui/project_screens/project_list_screen/project_list_screen.dart';
 import '../../../supabase_ui/chat_screens/chat_screen/chat_screen.dart';
-import '../../../supabase_ui/tag_screens/tag_list_screen/tag_list_screen.dart';
 import 'app_drawer_controller.dart';
 import 'drawer_section_header.dart';
 import 'drawer_chat_item.dart';
@@ -132,45 +130,6 @@ class _AppDrawerNewBody extends StatelessWidget {
                       ),
                   const SizedBox(height: 8),
                   const DrawerViewAllChats(),
-                  const SizedBox(height: 8),
-                  const Divider(height: 1),
-                  const SizedBox(height: 8),
-                  // プロジェクト関連
-                  const DrawerSectionHeader(
-                    title: 'プロジェクト',
-                    icon: Icons.folder,
-                  ),
-                  DrawerMenuItem(
-                    title: 'プロジェクト一覧',
-                    icon: Icons.folder_open,
-                    onTap: () {
-                      Navigator.pop(context);
-                      Navigator.pushReplacement(
-                        context,
-                        PageRouteBuilder(
-                          pageBuilder:
-                              (_, __, ___) => const ProjectListScreen(),
-                          transitionDuration: Duration.zero,
-                        ),
-                      );
-                    },
-                  ),
-                  DrawerMenuItem(
-                    title: 'タグ管理',
-                    icon: Icons.tag,
-                    onTap: () {
-                      Navigator.pop(context);
-                      Navigator.pushReplacement(
-                        context,
-                        PageRouteBuilder(
-                          pageBuilder:
-                              (_, __, ___) =>
-                                  const TagListScreen(projectId: ''),
-                          transitionDuration: Duration.zero,
-                        ),
-                      );
-                    },
-                  ),
                   const SizedBox(height: 8),
                   const Divider(height: 1),
 

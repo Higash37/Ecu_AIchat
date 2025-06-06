@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../../app_styles/app_theme.dart';
+import '../app_styles/app_theme.dart';
 
 class ChatInputField extends StatefulWidget {
   final Function(String) onSendPressed;

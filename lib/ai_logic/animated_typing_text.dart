@@ -4,14 +4,10 @@ import 'package:flutter/material.dart';
 class AnimatedTypingText extends StatefulWidget {
   final String text;
   final TextStyle style;
-  final VoidCallback? onFinished;
-  final bool enableAnimation; // 新しいプロパティ
 
   const AnimatedTypingText({
     required this.text,
     required this.style,
-    this.onFinished,
-    this.enableAnimation = true, // デフォルトでアニメーションを有効化
     super.key,
   });
 
@@ -26,11 +22,7 @@ class _AnimatedTypingTextState extends State<AnimatedTypingText> {
   @override
   void initState() {
     super.initState();
-    if (widget.enableAnimation) {
-      _startAnimation();
-    } else {
-      _displayText = widget.text; // アニメーションを無効化した場合、全テキストを即座に表示
-    }
+    _startAnimation();
   }
 
   void _startAnimation() {
@@ -39,7 +31,6 @@ class _AnimatedTypingTextState extends State<AnimatedTypingText> {
     _timer = Timer.periodic(const Duration(milliseconds: 40), (timer) {
       if (index >= widget.text.length) {
         timer.cancel();
-        widget.onFinished?.call();
       } else {
         setState(() {
           _displayText = widget.text.substring(
