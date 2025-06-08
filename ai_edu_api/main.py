@@ -53,10 +53,15 @@ class ResidentAIAgent:
             time.sleep(60)  # 1分ごとに知識グラフを更新
 
     def update_knowledge(self):
-        # TODO: SupabaseやDBから全ユーザーのチャット履歴・頻度・時間帯・速度などを取得
-        # 例: self.user_profiles[user_id] = {"性格": ..., "傾向": ..., "感情履歴": ...}
         try:
-            print("[ResidentAIAgent] 知識グラフの更新はスキップされました: chat_history テーブルが存在しません。")
+            print("[ResidentAIAgent] 知識グラフの更新を開始します。")
+            # TODO: Supabaseの'message'テーブルからデータを取得して知識グラフを更新
+            response = supabase.table("message")\
+                .select("chat_id, sender, content, created_at")\
+                .execute()
+            data = response.data if hasattr(response, "data") else response
+            print(f"[ResidentAIAgent] 取得したデータ: {data}")
+            # 知識グラフの更新ロジックをここに追加
         except Exception as e:
             print(f"[ResidentAIAgent] 知識グラフの更新中にエラーが発生しました: {e}")
         self.last_update = time.time()

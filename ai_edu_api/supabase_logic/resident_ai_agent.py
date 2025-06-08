@@ -26,12 +26,18 @@ class ResidentAIAgent:
         self.user_profiles = {}
 
     def analyze_user(self, user_id, chat_history):
+        if not chat_history:
+            print(f"[ResidentAI] No chat history provided for user_id: {user_id}")
+            return None
+
+        # Example logic to analyze chat history and update user profile
         profile = {
             "性格": "おおらか",
             "傾向": "夜型・返信早い・ポジティブ多め",
-            "感情履歴": ["喜び", "驚き", "ニュートラル"]
+            "感情履歴": [msg.get("content", "") for msg in chat_history if "content" in msg]
         }
         self.user_profiles[user_id] = profile
+        print(f"[ResidentAI] Updated profile for user_id {user_id}: {profile}")
         return profile
 
     def creative_thinking(self, user_input, context, user_id=None):
