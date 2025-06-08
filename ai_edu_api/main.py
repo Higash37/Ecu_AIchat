@@ -2,7 +2,6 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, StreamingResponse
 from openai import OpenAI
-from supabase import create_client, Client
 import os
 import pathlib
 import json
@@ -32,11 +31,6 @@ app.add_middleware(
 # ✅ OpenAIクライアント（.envファイルからOPENAI_API_KEYを読み込み）
 client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 
-# Supabaseクライアント
-SUPABASE_URL = os.environ.get("SUPABASE_URL")
-SUPABASE_KEY = os.environ.get("SUPABASE_ANON_KEY")
-supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
-
 # --- 独自AIエージェント: DBやOpenAIの裏で“住み着く”知識グラフ・推論エンジン ---
 class ResidentAIAgent:
     def __init__(self):
@@ -56,12 +50,6 @@ class ResidentAIAgent:
         try:
             print("[ResidentAIAgent] 知識グラフの更新を開始します。")
             # TODO: Supabaseの'message'テーブルからデータを取得して知識グラフを更新
-            response = supabase.table("message")\
-                .select("chat_id, sender, content, created_at")\
-                .execute()
-            data = response.data if hasattr(response, "data") else response
-            print(f"[ResidentAIAgent] 取得したデータ: {data}")
-            # 知識グラフの更新ロジックをここに追加
         except Exception as e:
             print(f"[ResidentAIAgent] 知識グラフの更新中にエラーが発生しました: {e}")
         self.last_update = time.time()

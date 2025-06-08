@@ -42,19 +42,13 @@ def chat_endpoint_logic(data):
         logging.error(f"Error retrieving OpenAI messages: {e}")
         openai_messages = []
 
-    context_messages = "\n".join([msg["content"] for msg in resident_messages + openai_messages])
+    # フロントエンドから受け取った情報をプロンプトに統合
+    context_messages = "\n".join([msg["content"] for msg in resident_messages + openai_messages + messages])
     system_prompt = {
         "role": "system",
         "content": f"以下はこれまでの会話の文脈です:\n{context_messages}\nこれを踏まえて、以下の質問に答えてください。"
     }
     full_messages = [system_prompt] + resident_messages + openai_messages + messages
-
-    if chat_id and not any(x in messages[-1]["content"] for x in ["問題生成", "quiz"]):
-        try:
-            resident_ai.save_chat_history_to_supabase(chat_id, full_messages)
-            logging.debug(f"Saved full messages to Supabase: {full_messages}")
-        except Exception as e:
-            logging.error(f"Error saving full messages to Supabase: {e}")
 
     # Resident AI モード
     creative_result = None

@@ -6,8 +6,9 @@ env_path = os.path.join(os.path.dirname(__file__), '../../env.json')
 if os.path.exists(env_path):
     with open(env_path, 'r') as env_file:
         env_data = json.load(env_file)
-        os.environ["SUPABASE_URL"] = env_data.get("SUPABASE_URL", "")
-        os.environ["SUPABASE_ANON_KEY"] = env_data.get("SUPABASE_ANON_KEY", "")
+        # Supabase関連の環境変数を削除
+        # os.environ["SUPABASE_URL"] = env_data.get("SUPABASE_URL", "")
+        # os.environ["SUPABASE_ANON_KEY"] = env_data.get("SUPABASE_ANON_KEY", "")
 
 SUPABASE_URL = os.environ.get("SUPABASE_URL")
 SUPABASE_KEY = os.environ.get("SUPABASE_ANON_KEY")
