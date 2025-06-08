@@ -29,12 +29,11 @@ def chat_endpoint_logic(data):
         logging.error(f"Missing chat_id or user_id in request: chat_id={chat_id}, user_id={user_id}")
         return JSONResponse(status_code=400, content={"error": "Missing chat_id or user_id."})
 
-    try:
-        resident_messages = resident_ai.get_chat_history_from_supabase(chat_id) if chat_id else []
-        logging.debug(f"Resident messages retrieved: {resident_messages}")
-    except Exception as e:
-        logging.error(f"Error retrieving resident messages: {e}")
-        resident_messages = []
+    # フロントエンドから履歴を受け取る
+    if data and 'messages' in data:
+        resident_messages = data['messages']
+    else:
+        raise ValueError("No messages provided by frontend")
 
     try:
         openai_messages = resident_ai.get_openai_history(chat_id) if chat_id else []

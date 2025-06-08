@@ -16,31 +16,15 @@ from ai_edu_api.supabase_logic.resident_ai_agent import ResidentAIAgent
 def resident_ai_agent():
     return ResidentAIAgent()
 
-def test_save_chat_history_to_supabase(resident_ai_agent):
-    chat_id = "test_chat_id"
-    messages = [
-        {"role": "user", "content": "Hello!"},
-        {"role": "assistant", "content": "Hi there!"}
+def test_analyze_user(resident_ai_agent):
+    user_id = "test_user"
+    chat_history = [
+        {"content": "Hello!"},
+        {"content": "How are you?"}
     ]
 
-    # No exception should be raised
-    resident_ai_agent.save_chat_history_to_supabase(chat_id, messages)
+    profile = resident_ai_agent.analyze_user(user_id, chat_history)
 
-def test_get_chat_history_from_supabase(resident_ai_agent):
-    chat_id = "test_chat_id"
-
-    # Retrieve chat history
-    history = resident_ai_agent.get_chat_history_from_supabase(chat_id)
-
-    # Ensure the history is a list
-    assert isinstance(history, list)
-
-def test_env_variables():
-    assert os.environ.get("SUPABASE_URL") == "https://test.supabase.co"
-    assert os.environ.get("SUPABASE_ANON_KEY") == "test_key"
-
-@patch("ai_edu_api.supabase_logic.resident_ai_agent.create_client")
-def test_mock_supabase_client(mock_create_client):
-    mock_create_client.return_value = None
-    resident_ai_agent = ResidentAIAgent()
-    assert resident_ai_agent is not None
+    assert profile is not None
+    assert profile["性格"] == "おおらか"
+    assert "Hello!" in profile["感情履歴"]

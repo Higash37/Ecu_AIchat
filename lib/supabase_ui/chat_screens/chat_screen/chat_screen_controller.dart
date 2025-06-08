@@ -278,4 +278,38 @@ class ChatScreenController extends ChangeNotifier {
       await LocalCacheService.cacheMessages(chatId, [userMessage, aiMessage]);
     }
   }
+
+  Future<void> sendChatHistoryToBackend() async {
+    if (chatId.isEmpty || messages.isEmpty) {
+      return;
+    }
+
+    try {
+      final url = '${AppConfig.apiBaseUrl}/api/chat';
+      final response = await http.post(
+        Uri.parse(url),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'chat_id': chatId,
+          'messages':
+              messages
+                  .map(
+                    (msg) => {
+                      'id': msg.id,
+                      'content': (msg as types.TextMessage).text,
+                      'sender': msg.author.id,
+                      'created_at': msg.createdAt,
+                    },
+                  )
+                  .toList(),
+        }),
+      );
+
+      if (response.statusCode != 200) {
+        throw Exception('Failed to send chat history to backend');
+      }
+    } catch (e) {
+      print('Error sending chat history to backend: $e');
+    }
+  }
 }
