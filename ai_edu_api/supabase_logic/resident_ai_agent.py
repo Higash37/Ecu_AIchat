@@ -1,9 +1,25 @@
 from supabase import create_client, Client
 import os
+import json
+
+# Load environment variables from env.json
+env_path = os.path.join(os.path.dirname(__file__), '../../env.json')
+if os.path.exists(env_path):
+    with open(env_path, 'r') as env_file:
+        env_data = json.load(env_file)
+        os.environ["SUPABASE_URL"] = env_data.get("SUPABASE_URL", "")
+        os.environ["SUPABASE_ANON_KEY"] = env_data.get("SUPABASE_ANON_KEY", "")
 
 SUPABASE_URL = os.environ.get("SUPABASE_URL")
 SUPABASE_KEY = os.environ.get("SUPABASE_ANON_KEY")
+
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+
+# Load OpenAI API key
+OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
+
+# Example usage of OpenAI API key
+print(f"OpenAI API Key: {OPENAI_API_KEY}")
 
 class ResidentAIAgent:
     def __init__(self):
@@ -54,13 +70,15 @@ class ResidentAIAgent:
             return []
 
         try:
-            response = supabase.table("messages")\
+            response = supabase.table("message")\
                 .select("sender, content")\
                 .eq("chat_id", chat_id)\
                 .order("created_at")\
                 .execute()
             data = response.data if hasattr(response, "data") else response
             print(f"[ResidentAI] Retrieved chat history: {data}")
+            for msg in data:
+                print(f"[ResidentAI] Message details - sender: {msg.get('sender')}, content: {msg.get('content')}")
             return [
                 {"role": msg["sender"], "content": msg["content"]}
                 for msg in data if "sender" in msg and "content" in msg
