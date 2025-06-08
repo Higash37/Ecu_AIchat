@@ -42,11 +42,12 @@ def chat_endpoint_logic(data):
         logging.error(f"Error retrieving OpenAI messages: {e}")
         openai_messages = []
 
-    # フロントエンドから受け取った情報をプロンプトに統合
+    # ユーザープロファイルを分析し、プロンプトに統合
+    user_profile = resident_ai.analyze_user(user_id, messages) if user_id else {}
     context_messages = "\n".join([msg["content"] for msg in resident_messages + openai_messages + messages])
     system_prompt = {
         "role": "system",
-        "content": f"以下はこれまでの会話の文脈です:\n{context_messages}\nこれを踏まえて、以下の質問に答えてください。"
+        "content": f"以下はこれまでの会話の文脈です:\n{context_messages}\nこれを踏まえて、以下の質問に答えてください。\n\nユーザープロファイル:\n性格: {user_profile.get('性格', '不明')}\n傾向: {user_profile.get('傾向', '不明')}"
     }
     full_messages = [system_prompt] + resident_messages + openai_messages + messages
 
