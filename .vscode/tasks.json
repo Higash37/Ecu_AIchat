@@ -1,0 +1,14 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "type": "shell",
+      "label": "Run ResidentAIAgent Tests",
+      "command": "pytest",
+      "args": ["-v", "c:\\git\\ai_edu_chat\\ai_edu_api\\tests"],
+      "problemMatcher": ["$python"],
+      "group": "test",
+      "isBackground": false
+    }
+  ]
+}

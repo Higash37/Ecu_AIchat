@@ -26,39 +26,36 @@ def chat_endpoint_logic(data):
     count = int(data.get("count", 1))
 
     if not chat_id or not user_id:
-        logging.error("Missing chat_id or user_id in request.")
+        logging.error(f"Missing chat_id or user_id in request: chat_id={chat_id}, user_id={user_id}")
         return JSONResponse(status_code=400, content={"error": "Missing chat_id or user_id."})
 
-    user_profile = resident_ai.user_profiles.get(user_id)
-
-    is_quiz_request = any(x in question for x in [
-        "問題生成", "問題を作って", "quiz", "問題を出して", "問題作成", "問題を自動生成"
-    ])
-
-    if is_quiz_request:
-        # 出題専用プロンプトを使用、履歴は混ぜない
-        system_prompt = generate_problem_prompt(
-            user_profile=user_profile,
-            quiz_type=quiz_type,
-            level=level,
-            tags=tags,
-            layout=layout,
-            count=count
-        )
-        full_messages = [system_prompt]
-    else:
-        # 履歴を活かした通常会話
+    try:
         resident_messages = resident_ai.get_chat_history_from_supabase(chat_id) if chat_id else []
-        openai_messages = resident_ai.get_openai_history(chat_id) if chat_id else []
-        context_messages = "\n".join([msg["content"] for msg in resident_messages + openai_messages])
-        system_prompt = {
-            "role": "system",
-            "content": f"以下はこれまでの会話の文脈です:\n{context_messages}\nこれを踏まえて、以下の質問に答えてください。"
-        }
-        full_messages = [system_prompt] + resident_messages + openai_messages + messages
+        logging.debug(f"Resident messages retrieved: {resident_messages}")
+    except Exception as e:
+        logging.error(f"Error retrieving resident messages: {e}")
+        resident_messages = []
 
-    if chat_id and not is_quiz_request:
-        resident_ai.save_chat_history_to_supabase(chat_id, full_messages)
+    try:
+        openai_messages = resident_ai.get_openai_history(chat_id) if chat_id else []
+        logging.debug(f"OpenAI messages retrieved: {openai_messages}")
+    except Exception as e:
+        logging.error(f"Error retrieving OpenAI messages: {e}")
+        openai_messages = []
+
+    context_messages = "\n".join([msg["content"] for msg in resident_messages + openai_messages])
+    system_prompt = {
+        "role": "system",
+        "content": f"以下はこれまでの会話の文脈です:\n{context_messages}\nこれを踏まえて、以下の質問に答えてください。"
+    }
+    full_messages = [system_prompt] + resident_messages + openai_messages + messages
+
+    if chat_id and not any(x in messages[-1]["content"] for x in ["問題生成", "quiz"]):
+        try:
+            resident_ai.save_chat_history_to_supabase(chat_id, full_messages)
+            logging.debug(f"Saved full messages to Supabase: {full_messages}")
+        except Exception as e:
+            logging.error(f"Error saving full messages to Supabase: {e}")
 
     # Resident AI モード
     creative_result = None

@@ -28,25 +28,29 @@ class ResidentAIAgent:
 
     def save_chat_history_to_supabase(self, chat_id: str, messages: list):
         if not chat_id or not messages:
+            print(f"[ResidentAI] Invalid chat_id or empty messages: chat_id={chat_id}, messages={messages}")
             return
 
         rows = []
         for msg in messages:
             if not isinstance(msg, dict) or "role" not in msg or "content" not in msg:
+                print(f"[ResidentAI] Skipping invalid message format: {msg}")
                 continue
             rows.append({
                 "chat_id": chat_id,
-                "sender": msg["role"],  # OpenAI role => Supabase sender
+                "sender": msg["role"],
                 "content": msg["content"]
             })
 
         try:
             supabase.table("messages").insert(rows).execute()
+            print(f"[ResidentAI] Successfully saved messages to Supabase: {rows}")
         except Exception as e:
-            print(f"[ResidentAI] メッセージ保存エラー: {e}")
+            print(f"[ResidentAI] Error saving messages to Supabase: {e}")
 
     def get_chat_history_from_supabase(self, chat_id: str):
         if not chat_id:
+            print(f"[ResidentAI] Invalid chat_id: {chat_id}")
             return []
 
         try:
@@ -56,10 +60,11 @@ class ResidentAIAgent:
                 .order("created_at")\
                 .execute()
             data = response.data if hasattr(response, "data") else response
+            print(f"[ResidentAI] Retrieved chat history: {data}")
             return [
                 {"role": msg["sender"], "content": msg["content"]}
                 for msg in data if "sender" in msg and "content" in msg
             ]
         except Exception as e:
-            print(f"[ResidentAI] 履歴取得エラー: {e}")
+            print(f"[ResidentAI] Error retrieving chat history: {e}")
             return []
